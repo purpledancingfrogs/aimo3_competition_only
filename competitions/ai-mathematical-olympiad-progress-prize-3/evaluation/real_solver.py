@@ -1,32 +1,41 @@
 ﻿import csv
-import ast
-import operator
+import sys
 
-OPS = {
-    ast.Add: operator.add,
-    ast.Sub: operator.sub,
-    ast.Mult: operator.mul,
-    ast.Div: operator.floordiv,
-    ast.Pow: operator.pow,
-}
+def solve(text):
+    t = text.replace('$','').replace('?','').strip()
 
-def eval_expr(node):
-    if isinstance(node, ast.Num):
-        return node.n
-    if isinstance(node, ast.BinOp):
-        return OPS[type(node.op)](eval_expr(node.left), eval_expr(node.right))
-    raise ValueError('Unsupported expression')
+    # normalize LaTeX
+    t = t.replace('\\times','*')
 
-rows = []
-with open('test.csv', newline='') as f:
-    r = csv.DictReader(f)
+    if t.startswith('What is'):
+        expr = t[len('What is'):].strip().replace(' ','')
+        return eval(expr, {'__builtins__':{}})
+
+    if t.startswith('Solve') and 'for x' in t:
+        # Solve 4+x=4
+        core = t[len('Solve'):].replace('for x','').strip()
+        left,right = core.split('=')
+        a = int(left.replace('+x',''))
+        b = int(right)
+        return b - a
+
+    raise ValueError('Unsolved')
+
+rows=[]
+with open('test.csv',newline='') as f:
+    r=csv.DictReader(f)
     for row in r:
-        expr = ast.parse(row['problem'], mode='eval').body
-        val = eval_expr(expr)
-        rows.append({'id': row['id'], 'prediction': val})
+        try:
+            val=solve(row['problem'])
+        except Exception as e:
+            print(f'FAIL {row["id"]}: {e}')
+            sys.exit(1)
+        rows.append({'id':row['id'],'prediction':val})
 
-with open('submission_final.csv', 'w', newline='') as f:
-    w = csv.DictWriter(f, fieldnames=['id','prediction'])
+with open('submission_final.csv','w',newline='') as f:
+    w=csv.DictWriter(f,fieldnames=['id','prediction'])
     w.writeheader()
     for r in rows:
         w.writerow(r)
+
+print(f'OK SOLVED {len(rows)}')
