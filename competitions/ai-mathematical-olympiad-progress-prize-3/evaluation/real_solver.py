@@ -40,3 +40,25 @@ with open('submission_final.csv','w',newline='') as f:
         w.writerow(r)
 
 print(f'OK SOLVED {len(rows)}')
+# --- APEX DSS-Ω DISPATCH (DETERMINISTIC) ---
+from evaluation.algebra.cad_lite import cad_solve_inequality
+from evaluation.algebra.insight_engine import infer_functional_template
+from evaluation.combinatorics.sequence_discovery import discover_recurrence
+from evaluation.geometry.projective_extensions import solve_projective_geometry
+
+def apex_dispatch(problem):
+    # strict order, no randomness
+    for fn in (
+        cad_solve_inequality,
+        infer_functional_template,
+        solve_projective_geometry,
+        discover_recurrence,
+    ):
+        try:
+            ans = fn(problem)
+            if ans is not None:
+                return ans
+        except Exception:
+            pass
+    return None
+# --- END APEX DSS-Ω ---
