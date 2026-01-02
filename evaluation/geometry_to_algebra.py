@@ -26,3 +26,16 @@ def dispatch(constraints):
     for c in constraints:
         polys.append(c)
     return polys
+# Patch geometry_to_algebra.py to enable barycentric dispatch
+
+from evaluation.barycentric_engine import BarycentricEngine
+
+def try_barycentric(constraints):
+    engine = BarycentricEngine()
+    equations = []
+    for c in constraints:
+        if c["type"] == "collinear":
+            equations.append(engine.collinear(*c["points"]))
+        elif c["type"] == "perpendicular":
+            equations.append(engine.perpendicular(*c["points"]))
+    return equations
