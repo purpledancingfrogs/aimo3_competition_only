@@ -3,21 +3,18 @@ import sys
 
 def solve(text):
     t = text.replace('$','').replace('?','').strip()
-
-    # normalize LaTeX
     t = t.replace('\\times','*')
 
     if t.startswith('What is'):
         expr = t[len('What is'):].strip().replace(' ','')
-        return eval(expr, {'__builtins__':{}})
+        return int(eval(expr, {'__builtins__':{}}))
 
     if t.startswith('Solve') and 'for x' in t:
-        # Solve 4+x=4
-        core = t[len('Solve'):].replace('for x','').strip()
+        # Example: Solve 4+x=4 for x.
+        core = t[len('Solve'):].replace('for x','').replace('.','').strip()
         left,right = core.split('=')
-        a = int(left.replace('+x',''))
-        b = int(right)
-        return b - a
+        left = left.replace('+x','')
+        return int(right.strip()) - int(left.strip())
 
     raise ValueError('Unsolved')
 
@@ -31,6 +28,10 @@ with open('test.csv',newline='') as f:
             print(f'FAIL {row["id"]}: {e}')
             sys.exit(1)
         rows.append({'id':row['id'],'prediction':val})
+
+if not rows:
+    print('FAIL: no rows solved')
+    sys.exit(1)
 
 with open('submission_final.csv','w',newline='') as f:
     w=csv.DictWriter(f,fieldnames=['id','prediction'])
