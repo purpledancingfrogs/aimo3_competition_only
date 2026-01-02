@@ -54,3 +54,17 @@ def try_complex(constraints):
         elif c["type"] == "cyclic":
             eqs.append(eng.cyclic(*pts))
     return eqs
+# WIRE INVERSION MAPPER INTO GEOMETRY DISPATCH
+from evaluation.geometry.inversion import InversionMapper, Point, Circle, Line
+
+def try_inversion(constraints, center, radius_sq):
+    inv = InversionMapper(center, radius_sq)
+    out = []
+    for obj in constraints:
+        if obj["kind"] == "point":
+            out.append(inv.invert_point(obj["value"]))
+        elif obj["kind"] == "circle":
+            out.append(inv.invert_circle(obj["value"]))
+        elif obj["kind"] == "line":
+            out.append(inv.invert_line(obj["value"]))
+    return out
