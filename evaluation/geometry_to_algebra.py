@@ -39,3 +39,18 @@ def try_barycentric(constraints):
         elif c["type"] == "perpendicular":
             equations.append(engine.perpendicular(*c["points"]))
     return equations
+# patch geometry_to_algebra.py to add complex dispatch
+from evaluation.complex_engine import ComplexEngine
+
+def try_complex(constraints):
+    eng = ComplexEngine()
+    eqs = []
+    for c in constraints:
+        pts = [eng.to_complex(p) for p in c["points"]]
+        if c["type"] == "collinear":
+            eqs.append(eng.collinear(*pts))
+        elif c["type"] == "perpendicular":
+            eqs.append(eng.perpendicular(*pts))
+        elif c["type"] == "cyclic":
+            eqs.append(eng.cyclic(*pts))
+    return eqs
