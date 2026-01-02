@@ -1,10 +1,10 @@
 ﻿# evaluation/discrete_solver.py
-# Deterministic Number Theory + Combinatorics Engine (Standard Library Only)
+# Deterministic number theory + combinatorics engine (stdlib only)
 
+from math import isqrt
 from functools import lru_cache
-from math import gcd
 
-# ---------------- Number Theory ----------------
+# ---------- Number Theory ----------
 
 def egcd(a, b):
     if b == 0:
@@ -15,45 +15,40 @@ def egcd(a, b):
 def modinv(a, m):
     g, x, _ = egcd(a, m)
     if g != 1:
-        return None
+        raise ValueError("No modular inverse")
     return x % m
 
-def crt(congruences):
-    # congruences = [(a1, m1), (a2, m2), ...]
-    x, M = 0, 1
-    for a, m in congruences:
-        inv = modinv(M, m)
-        if inv is None:
-            return None
-        x = (a - x) * inv % m * M + x
-        M *= m
-        x %= M
-    return x, M
+def crt(pairs):
+    # pairs = [(a1, m1), (a2, m2), ...]
+    x, m = pairs[0]
+    for a2, m2 in pairs[1:]:
+        g, s, t = egcd(m, m2)
+        if (a2 - x) % g != 0:
+            raise ValueError("No CRT solution")
+        lcm = m * m2 // g
+        x = (x + (a2 - x) // g * s % (m2 // g) * m) % lcm
+        m = lcm
+    return x, m
 
-def smallest_solution(predicate, limit=1_000_000):
-    for n in range(limit):
-        if predicate(n):
-            return n
-    return None
+def sieve(n):
+    is_prime = [True] * (n + 1)
+    is_prime[0:2] = [False, False]
+    for i in range(2, isqrt(n) + 1):
+        if is_prime[i]:
+            for j in range(i*i, n+1, i):
+                is_prime[j] = False
+    return [i for i, v in enumerate(is_prime) if v]
 
-# ---------------- Combinatorics / DP ----------------
+# ---------- Combinatorics ----------
 
 @lru_cache(None)
-def binomial(n, k):
+def binom(n, k):
     if k < 0 or k > n:
         return 0
     if k == 0 or k == n:
         return 1
-    return binomial(n-1, k-1) + binomial(n-1, k)
+    return binom(n-1, k-1) + binom(n-1, k)
 
-@lru_cache(None)
-def partitions(n, max_part=None):
-    if n == 0:
-        return 1
-    if n < 0:
-        return 0
-    if max_part is None or max_part > n:
-        max_part = n
-    if max_part == 0:
-        return 0
-    return partitions(n, max_part-1) + partitions(n-max_part, max_part)
+def count_subsets(n):
+    # 2^n deterministically
+    return 1 << n

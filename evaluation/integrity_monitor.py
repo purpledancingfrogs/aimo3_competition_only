@@ -1,44 +1,26 @@
 ﻿# evaluation/integrity_monitor.py
-# Deterministic Watchdog + Reproducibility Gate (NO time(), NO randomness)
+# Deterministic execution watchdog (audit-safe, no wall-clock dependence)
+
+MAX_STEPS_PRIMARY = 5_000_000
+MAX_STEPS_FALLBACK = 1_000_000
 
 class IntegrityMonitor:
-    """
-    Counts logical operations instead of wall-clock time.
-    Enforces deterministic fallbacks.
-    """
-
-    def __init__(self, max_steps):
-        self.max_steps = max_steps
+    def __init__(self):
         self.steps = 0
-        self.tripped = False
+        self.best_guess = None
 
-    def tick(self, n=1):
+    def step(self, n=1):
         self.steps += n
-        if self.steps > self.max_steps:
-            self.tripped = True
-            raise RuntimeError("STEP LIMIT EXCEEDED")
+        if self.steps > MAX_STEPS_PRIMARY:
+            raise RuntimeError("PRIMARY_LIMIT_EXCEEDED")
+
+    def checkpoint(self, value):
+        # value must be JSON-serializable
+        self.best_guess = value
+
+    def fallback_allowed(self):
+        return self.steps <= (MAX_STEPS_PRIMARY + MAX_STEPS_FALLBACK)
 
     def reset(self):
         self.steps = 0
-        self.tripped = False
-
-
-class DeterministicGate:
-    """
-    Stage controller:
-    1. Exact symbolic
-    2. Bounded discrete
-    3. Deterministic fallback
-    """
-
-    def __init__(self, step_limit=5_000_000):
-        self.monitor = IntegrityMonitor(step_limit)
-
-    def run(self, stages):
-        for stage in stages:
-            try:
-                self.monitor.reset()
-                return stage(self.monitor)
-            except RuntimeError:
-                continue
-        return None
+        self.best_guess = None
