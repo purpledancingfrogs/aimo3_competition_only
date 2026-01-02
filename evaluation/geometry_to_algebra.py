@@ -68,3 +68,27 @@ def try_inversion(constraints, center, radius_sq):
         elif obj["kind"] == "line":
             out.append(inv.invert_line(obj["value"]))
     return out
+from evaluation.geometry.inversion import InversionMapper, Point, Circle, Line
+
+def try_inversion(constraints):
+    # deterministic center selection: first circle center lexicographically
+    circles = [c for c in constraints if c["type"] == "circle"]
+    if not circles:
+        return None
+
+    centers = sorted([(c["center"].x, c["center"].y) for c in circles])
+    O = Point(centers[0][0], centers[0][1])
+    r2 = circles[0]["radius_sq"]
+
+    inv = InversionMapper(O, r2)
+    new_constraints = []
+
+    for c in constraints:
+        if c["type"] == "circle":
+            new_constraints.append(inv.invert_circle(c["obj"]))
+        elif c["type"] == "line":
+            new_constraints.append(inv.invert_line(c["obj"]))
+        elif c["type"] == "point":
+            new_constraints.append(inv.invert_point(c["obj"]))
+
+    return new_constraints
