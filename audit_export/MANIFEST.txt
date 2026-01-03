@@ -1,0 +1,13 @@
+﻿AIMO3 DSS-Omega Audit Package
+
+Contents:
+- solver_core.py (deterministic solver)
+- README.md (design + guarantees)
+- AUDIT_NOTES.md (fallback rationale)
+- DSS-Omega-Deterministic-Solver-AIMO3.ipynb (source notebook)
+- DSS-Omega-Deterministic-Solver-AIMO3_EXECUTED.ipynb (executed run)
+- submission.parquet (final submission artifact)
+
+Notes:
+- Kaggle UI access blocked by reCAPTCHA
+- GitHub is the source of truth for audit
