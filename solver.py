@@ -1,71 +1,50 @@
 ﻿import re
 from fractions import Fraction
 
-def solve(problem):
-    def normalize(s):
-        s = re.sub(r'\\\(|\\\)|\\\[|\\\]|\$', '', s)
-        s = re.sub(r'(?i)solve|for x\.?|what is', '', s)
-        s = s.replace('\\times','*').replace('\\cdot','*').replace('\u2212','-')
-        s = s.replace(' ','').rstrip('.?!')
-        s = re.sub(r'(\d)(x)', r'\1*x', s, flags=re.I)
-        return s
+def solve(problem: str):
+    if not isinstance(problem, str) or not problem:
+        return 0
 
-    def eval_expr(expr):
-        tokens = re.findall(r'\d+|\d+/\d+|x|[+\-*/()]', expr)
-        vals, ops = [], []
-        prec = {'+':1,'-':1,'*':2,'/':2}
+    s = problem.lower()
+    s = re.sub(r'\\\(|\\\)|\\\[|\\\]|\$', '', s)
+    s = re.sub(r'what is|solve|for x\.?', '', s)
+    s = s.replace(' ', '').replace('−', '-').replace('×', '*').replace('^', '**')
+    s = re.sub(r'(\d)(x)', r'\1*x', s)
 
-        def apply():
-            if len(vals) < 2 or not ops:
-                return
-            b = vals.pop()
-            a = vals.pop()
-            op = ops.pop()
-            if op == '+': vals.append((a[0]+b[0], a[1]+b[1]))
-            elif op == '-': vals.append((a[0]-b[0], a[1]-b[1]))
-            elif op == '*':
-                if a[0]!=0 and b[0]!=0: vals.append((0,0))
-                else: vals.append((a[0]*b[1]+b[0]*a[1], a[1]*b[1]))
-            elif op == '/':
-                if b[0]!=0 or b[1]==0: vals.append((0,0))
-                else: vals.append((a[0]/b[1], a[1]/b[1]))
+    def eval_simple(expr):
+        try:
+            return Fraction(eval(expr, {"__builtins__": {}}, {}))
+        except:
+            return Fraction(0)
 
-        i=0
-        while i < len(tokens):
-            t = tokens[i]
-            if t == '(':
-                ops.append(t)
-            elif t == ')':
-                while ops and ops[-1] != '(':
-                    apply()
-                if ops: ops.pop()
-            elif t in '+-*/':
-                if t=='-' and (i==0 or tokens[i-1] in '+-*/('):
-                    vals.append((Fraction(0),Fraction(0)))
-                while ops and ops[-1]!='(' and prec.get(ops[-1],0)>=prec[t]:
-                    apply()
-                ops.append(t)
-            elif t.lower()=='x':
-                vals.append((Fraction(1),Fraction(0)))
-            else:
-                vals.append((Fraction(0),Fraction(t)))
-            i+=1
-        while ops:
-            apply()
-        return vals[0] if vals else (Fraction(0),Fraction(0))
+    if '=' not in s:
+        v = eval_simple(s)
+        return int(v) if v.denominator == 1 else f"{v.numerator}/{v.denominator}"
 
+    l, r = s.split('=', 1)
     try:
-        clean = normalize(problem)
-        if '=' in clean:
-            l,r = clean.split('=')
-            a1,b1 = eval_expr(l)
-            a2,b2 = eval_expr(r)
-            A = a1-a2
-            B = b2-b1
-            if A==0: return 0
-            res = B/A
-        else:
-            _,res = eval_expr(clean)
-        return int(res) if res.denominator==1 else f"{res.numerator}/{res.denominator}"
+        # ax+b = cx+d  →  (a-c)x = d-b
+        def coeff(expr):
+            expr = expr.replace('-', '+-')
+            a = Fraction(0)
+            b = Fraction(0)
+            for t in expr.split('+'):
+                if not t:
+                    continue
+                if 'x' in t:
+                    c = t.replace('*x', '').replace('x', '')
+                    a += Fraction(c) if c not in ('', '+', '-') else Fraction(1 if c != '-' else -1)
+                else:
+                    b += Fraction(t)
+            return a, b
+
+        a1, b1 = coeff(l)
+        a2, b2 = coeff(r)
+        A = a1 - a2
+        B = b2 - b1
+        if A == 0:
+            return 0
+        res = B / A
+        return int(res) if res.denominator == 1 else f"{res.numerator}/{res.denominator}"
     except:
         return 0
