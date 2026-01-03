@@ -31,7 +31,14 @@ def main():
     from submissions.ai_mathematical_olympiad_progress_prize_3.orchestrator.load_solvers import load_solvers
     solvers = load_solvers(); solver = solvers['solver'] if 'solver' in solvers else list(solvers.values())[0]
 
-    raw_results = next(iter(solver.values()))[0].solve(args.input)
+    solver_container = solver
+if isinstance(solver_container, dict):
+    solver_obj = next(iter(solver_container.values()))[0]
+elif isinstance(solver_container, list):
+    solver_obj = solver_container[0]
+else:
+    solver_obj = solver_container
+raw_results = solver_obj.solve(args.input)
     results = normalize(raw_results)
 
     with open(args.report, "w", encoding="utf-8") as f:
