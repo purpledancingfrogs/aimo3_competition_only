@@ -1,0 +1,31 @@
+{
+    "created_at":  "2025-12-31T23:59:59Z",
+    "env":  "PROOF",
+    "mission_id":  "swarm_proof_001",
+    "type":  "SWARM_CONVERGENCE",
+    "payload":  {
+                    "agents":  50,
+                    "task":  "run identical deterministic logic with logging",
+                    "steps":  [
+                                  {
+                                      "op":  "CREATE_DIRECTORY",
+                                      "path":  "agents/agent_{id}"
+                                  },
+                                  {
+                                      "path":  "agents/agent_{id}/TASK.txt",
+                                      "op":  "CREATE_FILE",
+                                      "content":  "Deterministic task assignment for convergence proof"
+                                  },
+                                  {
+                                      "path":  "agents/agent_{id}/__main__.py",
+                                      "op":  "CREATE_FILE",
+                                      "content":  "import logging\nlogging.basicConfig(filename=\u0027../../logs/agent_{id}.run.log\u0027)\nlogging.error(\u0027Missing orchestrator - expected for normalization\u0027)"
+                                  },
+                                  {
+                                      "script":  "__main__.py",
+                                      "op":  "RUN_SCRIPT",
+                                      "cwd":  "agents/agent_{id}"
+                                  }
+                              ]
+                }
+}

@@ -1,0 +1,7 @@
+ 
+    + CategoryInfo          : NotSpecified: (C:\Users\aureon...le or directory:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
++   python "$root\orchestrator\__main__.py" --agent $agent --taskfile $ ...
+At line:4 char:3
+python : C:\Users\aureon\AppData\Local\Programs\Python\Python311\python.exe: can't open file 'C:\\aureon-swarm\\orchestrator\\__main__.py': [Errno 2] No such file or directory

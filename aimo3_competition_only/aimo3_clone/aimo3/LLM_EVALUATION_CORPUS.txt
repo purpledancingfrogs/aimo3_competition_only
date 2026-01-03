@@ -1,0 +1,150 @@
+### agent_01.run.log
+AWAKE: agent_01
+
+### agent_02.run.log
+AWAKE: agent_02
+
+### agent_03.run.log
+AWAKE: agent_03
+
+### agent_04.run.log
+AWAKE: agent_04
+
+### agent_05.run.log
+AWAKE: agent_05
+
+### agent_06.run.log
+AWAKE: agent_06
+
+### agent_07.run.log
+AWAKE: agent_07
+
+### agent_08.run.log
+AWAKE: agent_08
+
+### agent_09.run.log
+AWAKE: agent_09
+
+### agent_10.run.log
+AWAKE: agent_10
+
+### agent_11.run.log
+AWAKE: agent_11
+
+### agent_12.run.log
+AWAKE: agent_12
+
+### agent_13.run.log
+AWAKE: agent_13
+
+### agent_14.run.log
+AWAKE: agent_14
+
+### agent_15.run.log
+AWAKE: agent_15
+
+### agent_16.run.log
+AWAKE: agent_16
+
+### agent_17.run.log
+AWAKE: agent_17
+
+### agent_18.run.log
+AWAKE: agent_18
+
+### agent_19.run.log
+AWAKE: agent_19
+
+### agent_20.run.log
+AWAKE: agent_20
+
+### agent_21.run.log
+AWAKE: agent_21
+
+### agent_22.run.log
+AWAKE: agent_22
+
+### agent_23.run.log
+AWAKE: agent_23
+
+### agent_24.run.log
+AWAKE: agent_24
+
+### agent_25.run.log
+AWAKE: agent_25
+
+### agent_26.run.log
+AWAKE: agent_26
+
+### agent_27.run.log
+AWAKE: agent_27
+
+### agent_28.run.log
+AWAKE: agent_28
+
+### agent_29.run.log
+AWAKE: agent_29
+
+### agent_30.run.log
+AWAKE: agent_30
+
+### agent_31.run.log
+AWAKE: agent_31
+
+### agent_32.run.log
+AWAKE: agent_32
+
+### agent_33.run.log
+AWAKE: agent_33
+
+### agent_34.run.log
+AWAKE: agent_34
+
+### agent_35.run.log
+AWAKE: agent_35
+
+### agent_36.run.log
+AWAKE: agent_36
+
+### agent_37.run.log
+AWAKE: agent_37
+
+### agent_38.run.log
+AWAKE: agent_38
+
+### agent_39.run.log
+AWAKE: agent_39
+
+### agent_40.run.log
+AWAKE: agent_40
+
+### agent_41.run.log
+AWAKE: agent_41
+
+### agent_42.run.log
+AWAKE: agent_42
+
+### agent_43.run.log
+AWAKE: agent_43
+
+### agent_44.run.log
+AWAKE: agent_44
+
+### agent_45.run.log
+AWAKE: agent_45
+
+### agent_46.run.log
+AWAKE: agent_46
+
+### agent_47.run.log
+AWAKE: agent_47
+
+### agent_48.run.log
+AWAKE: agent_48
+
+### agent_49.run.log
+AWAKE: agent_49
+
+### agent_50.run.log
+AWAKE: agent_50
+

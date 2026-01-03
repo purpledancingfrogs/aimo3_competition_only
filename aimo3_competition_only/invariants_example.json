@@ -1,0 +1,9 @@
+{
+  "invariants": {
+    "degree": 2,
+    "domain": "Z",
+    "symmetry": "reflection",
+    "bounded": true,
+    "dimensional": false
+  }
+}

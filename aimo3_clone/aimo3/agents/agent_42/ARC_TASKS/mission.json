@@ -1,0 +1,23 @@
+﻿{
+    "schema_version":  "2.0",
+    "created_by_agent":  "agent_42",
+    "mission_id":  "ARC_AGI_agent_42",
+    "type":  "AGI_TASK",
+    "payload":  {
+                    "steps":  [
+                                  {
+                                      "op":  "GENERATE_PUZZLES",
+                                      "target":  "C:\\aureon-swarm\\agents\\agent_42\\ARC_TASKS\\puzzles.json",
+                                      "quantity":  3
+                                  },
+                                  {
+                                      "target":  "C:\\aureon-swarm\\agents\\agent_42\\ARC_TASKS\\solutions.json",
+                                      "op":  "SOLVE_PUZZLES"
+                                  },
+                                  {
+                                      "target":  "C:\\aureon-swarm\\agents\\agent_42\\ARC_TASKS\\verification.json",
+                                      "op":  "VERIFY_SOLUTIONS"
+                                  }
+                              ]
+                }
+}

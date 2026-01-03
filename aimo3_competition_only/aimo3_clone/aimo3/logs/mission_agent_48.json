@@ -1,0 +1,16 @@
+{
+    "schema_version":  "2.0",
+    "created_by_agent":  "agent_48",
+    "mission_id":  "OPERATIONAL_ASI_agent_48",
+    "type":  "LAPTOP_FS",
+    "payload":  {
+                    "steps":  [
+                                  {
+                                      "content":  "",
+                                      "path":  "C:\\aureon-swarm\\agents\\agent_48\\run_agent.py",
+                                      "op":  "RUN_SCRIPT",
+                                      "expected_previous_hash":  ""
+                                  }
+                              ]
+                }
+}

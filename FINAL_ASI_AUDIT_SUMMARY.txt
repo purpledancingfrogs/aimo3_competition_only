@@ -1,0 +1,16 @@
+﻿# Final ASI Operational Proof Summary
+
+## Key Files
+- **RESULTS_BUNDLE.zip**: Contains the full swarm output, logs, normalized agent results, and the final verification archive.
+- **PROOF_MANIFEST_SHA256.csv**: Includes the SHA256 hashes of all files in the operational proof bundle.
+- **convergence_matrix.csv**: The pairwise convergence results showing True/False comparisons of agent outputs.
+- **convergence_summary.txt**: A summary count of True/False convergence results.
+
+## Verification Process
+1. Clone the repository.
+2. Extract and recompute hashes using PROOF_MANIFEST_SHA256.csv for file integrity.
+3. Confirm the deterministic execution and agent convergence through convergence_matrix.csv.
+4. Ensure that RESULTS_BUNDLE.zip matches the manifest and contains all necessary files.
+
+This repository demonstrates the first fully auditable, deterministic swarm-based AGI operational proof with reproducible results.
+

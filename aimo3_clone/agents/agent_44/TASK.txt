@@ -1,0 +1,11 @@
+﻿TASK: Riemann zeta zero verification
+METHOD: mpmath.zetazero + Turing bounds
+CRITICAL_LINE: Re(s)=1/2
+T_RANGE_START: 86000000
+T_RANGE_END: 88000000
+PRECISION_DIGITS: 80
+OUTPUT: zeros_agent_44.json
+INVARIANTS:
+ - no off-line zeros
+ - zero count matches Turing bound
+ - deterministic execution

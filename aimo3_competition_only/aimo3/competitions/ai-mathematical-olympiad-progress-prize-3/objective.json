@@ -1,0 +1,15 @@
+{
+  "competition": "ai-mathematical-olympiad-progress-prize-3",
+  "metric": "score",
+  "maximize": true,
+  "constraints": {
+    "format": "submission.csv",
+    "deterministic": true,
+    "no_external_data": true
+  },
+  "optimization": {
+    "search": "parallel",
+    "selection": "best_score",
+    "budget": "full"
+  }
+}

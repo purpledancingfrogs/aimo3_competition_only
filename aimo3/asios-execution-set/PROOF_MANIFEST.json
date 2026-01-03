@@ -1,0 +1,9 @@
+{
+  "artifacts": {
+    "decision_decomposition_final_proof.txt": {
+      "sha256": "$(Get-FileHash artifacts\decision_decomposition_final_proof.txt -Algorithm SHA256 | % Hash)",
+      "command": "asiosctl run decision-decomposition",
+      "expected": "success"
+    }
+  }
+}

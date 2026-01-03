@@ -1,0 +1,13 @@
+cross-model-convergence-benchmark\protocol\run_parameters.json
+
+Analyze the following decision scenario.
+
+Return:
+- Decision invariants
+- Failure modes
+- Priority ordering
+
+Do not optimize language.
+Do not reference training.
+Do not speculate about intent.
+

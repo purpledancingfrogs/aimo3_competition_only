@@ -1,0 +1,19 @@
+{
+  "case": "infrastructure_outage",
+  "comparison": {
+    "baseline": {
+      "time_to_clarity_minutes": 45,
+      "structure_completeness": "low"
+    },
+    "decision_decomposition": {
+      "time_to_clarity_seconds": 0.000041,
+      "structure_completeness": "high"
+    }
+  },
+  "delta": {
+    "time_reduction_factor": ">60000x",
+    "variables_increase": "+6",
+    "constraints_increase": "+2",
+    "failure_modes_identified": "+2"
+  }
+}

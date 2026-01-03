@@ -1,0 +1,16 @@
+﻿{
+    "predictions":  [
+                        {
+                            "id":  "000aaa",
+                            "prediction":  "0"
+                        },
+                        {
+                            "id":  "111bbb",
+                            "prediction":  "0"
+                        },
+                        {
+                            "id":  "222ccc",
+                            "prediction":  "0"
+                        }
+                    ]
+}

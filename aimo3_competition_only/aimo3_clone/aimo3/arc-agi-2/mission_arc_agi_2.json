@@ -1,0 +1,26 @@
+﻿{
+    "schema_version":  "2.0",
+    "env":  "PROOF",
+    "payload":  {
+                    "agents":  50,
+                    "task":  "Solve ARC-AGI-2 private evaluation set with ≥85% accuracy",
+                    "steps":  [
+                                  {
+                                      "op":  "CREATE_TASK",
+                                      "description":  "Prepare and submit tasks for private evaluation",
+                                      "target":  "C:\\aureon-swarm\\arc-agi-2\\private-evaluation-set.json"
+                                  },
+                                  {
+                                      "script":  "C:\\aureon-swarm\\arc-agi-2\\solve_arc_tasks.py",
+                                      "op":  "SOLVE_TASKS",
+                                      "target":  "C:\\aureon-swarm\\arc-agi-2\\arc-agi-2-solved.json"
+                                  },
+                                  {
+                                      "target":  "C:\\aureon-swarm\\arc-agi-2\\arc-agi-2-solved-verification.json",
+                                      "op":  "VERIFY_RESULTS"
+                                  }
+                              ]
+                },
+    "mission_id":  "arc-agi-2-solver",
+    "created_at":  "2025-12-31T23:59:59Z"
+}

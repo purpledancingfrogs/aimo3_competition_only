@@ -1,0 +1,26 @@
+situation: "Regional power outage during a heat wave"
+
+objectives:
+  - maintain power to hospitals and emergency services
+  - prevent cascading grid failure
+  - restore service to the general population
+
+knowns:
+  - ambient_temperature_celsius: ">35"
+  - electricity_demand: "elevated"
+  - hospitals_on_backup_power: true
+  - grid_operating_near_capacity: true
+
+unknowns:
+  - primary_failure_location
+  - remaining transformer margin
+  - time_to_secondary_failures
+
+constraints:
+  - hospital power loss unacceptable
+  - grid frequency must remain within tolerance
+  - repair crews limited in number
+
+assumptions:
+  - fuel supply for generators is finite
+  - public communication affects demand behavior

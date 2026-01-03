@@ -1,0 +1,24 @@
+AUREON STATUS SNAPSHOT
+
+Pipeline state:
+- Orchestrator entrypoint exists and executes
+- Agents wired to solver.py
+- solver.py requires answers.json (factual gate)
+- No answers.json populated yet
+- Normalized outputs not produced
+- submission_factual.csv is EMPTY
+
+Submission status:
+- BLOCKED by design
+- SUBMISSION_LOCK.DO_NOT_UPLOAD present
+- Human review required before any execution producing answers
+
+Next required actions:
+1) Populate agents/*/answers.json with factual (id, answer:int)
+2) Run orchestrator
+3) Review normalized/*.run.norm.txt
+4) Generate submission_factual.csv
+5) Human verification
+6) Remove submission lock manually
+
+STATUS: BLOCKED — FACTUAL INPUT NOT YET PROVIDED

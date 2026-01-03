@@ -1,0 +1,11 @@
+{
+    "competitions":  [
+                         "ai-mathematical-olympiad-progress-prize-3",
+                         "deep-past-initiative-machine-translation",
+                         "vesuvius-challenge-surface-detection",
+                         "google-tunix-hack-train-a-model-to-show-its-work"
+                     ],
+    "parallel_agents":  4,
+    "mode":  "kaggle",
+    "strategy":  "max_win_probability"
+}
