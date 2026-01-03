@@ -1,51 +1,32 @@
 ﻿import argparse
 import json
-from sympy import Integer, Rational, Expr
-
-def normalize(o):
-    if isinstance(o, dict):
-        return {k: normalize(v) for k, v in o.items()}
-    if isinstance(o, list):
-        return [normalize(v) for v in o]
-    if isinstance(o, Integer):
-        return int(o)
-    if isinstance(o, Rational):
-        return float(o)
-    if isinstance(o, Expr):
-        try:
-            return int(o)
-        except Exception:
-            try:
-                return float(o)
-            except Exception:
-                return str(o)
-    return o
+import csv
+from submissions.ai_mathematical_olympiad_progress_prize_3.orchestrator.load_solvers import load_solvers
+from submissions.ai_mathematical_olympiad_progress_prize_3.orchestrator.run_evaluation import normalize
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True)
     parser.add_argument("--report", required=True)
-    parser.add_argument("--time-budget", type=float, default=None)
     args = parser.parse_args()
 
-    from submissions.ai_mathematical_olympiad_progress_prize_3.orchestrator.load_solvers import load_solvers
-    solver_container = load_solvers()
+    solvers = load_solvers()
+    solver = list(solvers.values())[0][0]
 
-    if isinstance(solver_container, dict):
-        solver_obj = next(iter(solver_container.values()))[0]
-    elif isinstance(solver_container, list):
-        solver_obj = solver_container[0]
-    else:
-        solver_obj = solver_container
+    results = []
 
-    raw_results = solver_obj.solve(args.input)
-    if raw_results is None:
-        raw_results = {}
-
-    results = normalize(raw_results)
+    with open(args.input, newline='', encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            q = row.get("question") or row.get("problem") or row.get("input") or ""
+            out = solver.solve(q)
+            results.append({
+                "id": row.get("id"),
+                "prediction": out
+            })
 
     with open(args.report, "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2)
+        json.dump(normalize(results), f, indent=2)
 
 if __name__ == "__main__":
     main()
