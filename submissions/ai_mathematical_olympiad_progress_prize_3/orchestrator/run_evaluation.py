@@ -39,7 +39,10 @@ def main():
         solver_obj = solver_container
 
     raw_results = solver_obj.solve(args.input)
-    results = normalize(raw_results)
+    if raw_results is None:
+        results = {}
+    else:
+        results = normalize(raw_results)
 
     with open(args.report, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
