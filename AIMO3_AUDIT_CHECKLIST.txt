@@ -1,0 +1,48 @@
+﻿# AIMO-3 QUALIFICATION & HIGH-SCORE CHECKLIST (AUDIT-GRADE)
+
+[Notebook]
+- Single code cell only
+- No markdown cells
+- Python language
+- No internet
+- No pip installs
+- Deterministic execution
+- No randomness
+- No prints/log spam
+- No threads/async/sleeps
+
+[Gateway]
+- def predict(batch: pd.DataFrame) -> pd.DataFrame
+- Returns DataFrame with columns: id, answer
+- answer values are ints
+- AIMO3Gateway().run() called UNCONDITIONALLY
+- AIMO3Gateway() has NO arguments
+- .run() is the LAST line in the cell
+- predict never raises exceptions
+
+[Solver]
+- All logic inside solver only
+- Always returns an int
+- Handles empty/edge cases
+- Time-safe (bounded loops only)
+- Deterministic ordering
+- Verification step before return
+
+[Scoring Strategy]
+- Multi-category coverage required:
+  * Arithmetic
+  * Number theory
+  * Algebra (linear/quadratic)
+  * Sequences
+  * Combinatorics (small bounds)
+  * Geometry (integer results)
+- Candidate generation + verification loop
+- Fallback always safe
+
+[Submission Discipline]
+- One submission per day respected
+- Offline testing first
+- Paste once, submit once
+
+STATUS: QUALIFICATION CONFIRMED
+NEXT: IMPLEMENT FULL SOLVER CORE OFFLINE BEFORE PASTE
