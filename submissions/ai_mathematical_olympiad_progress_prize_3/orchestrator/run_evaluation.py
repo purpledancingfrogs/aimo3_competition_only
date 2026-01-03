@@ -38,7 +38,7 @@ def main():
     else:
         solver_obj = solver_container
 
-    raw_results = solver_obj.solve(args.input)
+    raw_results = solver_obj.solve(args.input)\n    if raw_results is None:\n        raw_results = {}
     if raw_results is None:
         results = {}
     else:
