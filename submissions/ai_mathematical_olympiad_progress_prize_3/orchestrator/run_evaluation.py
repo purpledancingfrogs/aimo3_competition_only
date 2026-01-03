@@ -38,11 +38,11 @@ def main():
     else:
         solver_obj = solver_container
 
-    raw_results = solver_obj.solve(args.input)\n    if raw_results is None:\n        raw_results = {}
+    raw_results = solver_obj.solve(args.input)
     if raw_results is None:
-        results = {}
-    else:
-        results = normalize(raw_results)
+        raw_results = {}
+
+    results = normalize(raw_results)
 
     with open(args.report, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
