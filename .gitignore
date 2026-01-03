@@ -1,3 +1,5 @@
+__pycache__/
+*.pyc
 solver_smoketest_*.txt
 solver_extended_*.txt
 AIMO3_SOLVER_VERIFICATION_*.txt
