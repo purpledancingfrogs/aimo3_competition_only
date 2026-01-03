@@ -1,1 +1,0 @@
-agent_05 :: Prime-pattern interval search (twin/Sophie Germain) :: deterministic, replayable, auditable

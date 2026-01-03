@@ -1,1 +1,0 @@
-agent_02 :: Erdos computational conjecture search (brute-force, invariant logged) :: deterministic, replayable, auditable

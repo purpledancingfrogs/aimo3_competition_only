@@ -1,1 +1,0 @@
-agent_06 :: Goldbach frontier verification (range partition, deterministic primes) :: deterministic, replayable, auditable

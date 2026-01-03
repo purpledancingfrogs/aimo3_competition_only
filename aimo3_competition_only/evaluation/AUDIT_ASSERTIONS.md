@@ -1,6 +1,0 @@
-- All solvers are deterministic
-- No placeholders or stubs
-- Uses SymPy / math primitives only
-- No external APIs or internet access
-- Reproducible from fresh environment
-- Confidence gate enforced

@@ -4,11 +4,8 @@ from solver import solve
 with open("test.csv", newline="") as f:
     rows = list(csv.DictReader(f))
 
-with open("output.csv", "w", newline="") as f:
-    writer = csv.DictWriter(f, fieldnames=["id", "prediction"])
-    writer.writeheader()
+with open("submission.csv","w",newline="") as f:
+    w = csv.DictWriter(f, fieldnames=["id","prediction"])
+    w.writeheader()
     for r in rows:
-        writer.writerow({
-            "id": r["id"],
-            "prediction": solve(r["problem"])
-        })
+        w.writerow({"id":r["id"],"prediction":solve(r["problem"])})

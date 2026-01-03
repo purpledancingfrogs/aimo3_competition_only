@@ -1,6 +1,0 @@
-{
-  "case": "infrastructure_outage",
-  "human_baseline_minutes": 45,
-  "structured_decomposition_minutes": 12,
-  "notes": "Baseline from documented emergency management exercises"
-}

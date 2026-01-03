@@ -1,1 +1,0 @@
-agent_03 :: Graph conjecture exhaustive generation/validation :: deterministic, replayable, auditable

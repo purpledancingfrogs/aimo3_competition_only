@@ -1,6 +1,0 @@
-﻿submission.parquet is generated INSIDE the Kaggle runtime at:
-  /kaggle/working/submission.parquet
-
-Due to Kaggle sandboxing, this file cannot be accessed or copied locally.
-Audit authority is the notebook code that writes the parquet via:
-  submission.to_parquet('/kaggle/working/submission.parquet', index=False)

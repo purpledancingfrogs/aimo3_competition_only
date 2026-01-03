@@ -1,7 +1,0 @@
-{
-  "case": "infrastructure_outage",
-  "violated_invariants": [
-    "Hidden Constraint Dominance",
-    "Time-to-Closure Compression"
-  ]
-}

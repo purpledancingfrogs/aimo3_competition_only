@@ -1,1 +1,0 @@
-agent_09 :: Formal proof search (Lean/Coq mini-benchmarks) :: deterministic, replayable, auditable
