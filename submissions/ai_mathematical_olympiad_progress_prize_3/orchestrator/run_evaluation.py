@@ -29,7 +29,7 @@ def main():
     args = parser.parse_args()
 
     from submissions.ai_mathematical_olympiad_progress_prize_3.orchestrator.load_solvers import load_solvers
-    solver = load_solvers()
+    solvers = load_solvers(); solver = solvers['solver'] if 'solver' in solvers else list(solvers.values())[0]
 
     raw_results = solver(args.input)
     results = normalize(raw_results)
