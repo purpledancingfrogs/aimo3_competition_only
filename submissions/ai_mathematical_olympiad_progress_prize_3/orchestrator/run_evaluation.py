@@ -28,8 +28,8 @@ def main():
     parser.add_argument("--time-budget", type=float, default=None)
     args = parser.parse_args()
 
-    from submissions.ai_mathematical_olympiad_progress_prize_3.orchestrator.load_solvers import load_solver
-    solver = load_solver()
+    from submissions.ai_mathematical_olympiad_progress_prize_3.orchestrator.load_solvers import load_solvers
+    solver = load_solvers()
 
     raw_results = solver(args.input)
     results = normalize(raw_results)
