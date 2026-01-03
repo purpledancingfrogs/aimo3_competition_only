@@ -1,4 +1,21 @@
-﻿__pycache__/
+﻿Set-Content -Path .gitignore -Encoding UTF8 -Value @"
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
+AIMO3_SOLVER_VERIFICATION_*.txt
+solver_smoketest_*.txt
+solver_extended_*.txt
+"@
+@"
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+AIMO3_SOLVER_VERIFICATION_*.txt
+solver_smoketest_*.txt
+solver_extended_*.txt
+"@ | Set-Content -Path .gitignore -Encoding UTF8
+AIMO3_SOLVER_VERIFICATION_*.txt
+solver_smoketest_*.txt
+solver_extended_*.txt
