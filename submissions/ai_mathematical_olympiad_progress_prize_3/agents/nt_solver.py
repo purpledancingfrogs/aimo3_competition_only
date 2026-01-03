@@ -1,32 +1,39 @@
-from .solver_base import SolverBase
-import re
-from sympy import factorint, isprime
+﻿import re
+from sympy import symbols, Eq, solve
+from sympy.parsing.sympy_parser import parse_expr
 
-class NTSolver(SolverBase):
-    domain = "NT"
-
+class NTSolver:
     def solve(self, problem_text):
+        if not problem_text:
+            return None
+
         t = problem_text.lower()
 
-        # basic arithmetic
-        m = re.search(r'(-?\d+)\s*[-+*/]\s*(-?\d+)', t)
+        # normalize latex / symbols
+        t = t.replace('\\\\times', '*').replace('×', '*').replace('$', '')
+
+        # explicit subtraction
+        if 'what is' in t:
+            m = re.search(r'(-?\d+)\s*-\s*(-?\d+)', t)
+            if m:
+                return int(m.group(1)) - int(m.group(2))
+
+        # multiplication
+        m = re.search(r'(-?\d+)\s*\*\s*(-?\d+)', t)
         if m:
+            return int(m.group(1)) * int(m.group(2))
+
+        # linear equation solve ax=b
+        if 'solve' in t and 'x' in t:
             try:
-                return eval(m.group(0))
+                x = symbols('x')
+                expr = re.sub(r'[^0-9x=+\-*/]', '', t)
+                if '=' in expr:
+                    lhs, rhs = expr.split('=')
+                    sol = solve(Eq(parse_expr(lhs), parse_expr(rhs)), x)
+                    if sol:
+                        return int(sol[0])
             except:
-                pass
-
-        # multiplication phrasing
-        nums = re.findall(r'-?\d+', t)
-        if "times" in t and len(nums) == 2:
-            return int(nums[0]) * int(nums[1])
-
-        # primality
-        if "prime" in t and nums:
-            return int(isprime(int(nums[0])))
-
-        # factorization count
-        if "factor" in t and nums:
-            return factorint(int(nums[0]))
+                return None
 
         return None
