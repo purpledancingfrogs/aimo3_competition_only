@@ -1,27 +1,20 @@
-﻿import sys, csv
+﻿import csv
+import sys
 from solver import solve
 
-def main():
-    if len(sys.argv) != 3:
-        sys.exit(2)
-
-    inp, out = sys.argv[1], sys.argv[2]
-
-    with open(inp, newline='', encoding='utf-8') as f:
+def main(inp, outp):
+    with open(inp, newline="", encoding="utf-8") as f, open(outp, "w", newline="", encoding="utf-8") as g:
         reader = csv.DictReader(f)
-        # accept either 'id' or first column as identifier
-        id_field = 'id' if 'id' in reader.fieldnames else reader.fieldnames[0]
-        prob_field = 'problem' if 'problem' in reader.fieldnames else reader.fieldnames[-1]
-        rows = list(reader)
+        # Accept either "id" or positional index if id is missing
+        fieldnames = ["id", "prediction"]
+        writer = csv.DictWriter(g, fieldnames=fieldnames)
+        writer.writeheader()
+        for i, r in enumerate(reader):
+            rid = r.get("id", i)
+            prob = r.get("problem") or r.get("question") or ""
+            writer.writerow({"id": rid, "prediction": solve(prob)})
 
-    with open(out, 'w', newline='', encoding='utf-8') as f:
-        w = csv.DictWriter(f, fieldnames=['id', 'prediction'])
-        w.writeheader()
-        for r in rows:
-            w.writerow({
-                'id': r[id_field],
-                'prediction': solve(r[prob_field])
-            })
-
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        raise SystemExit("usage: python run.py <input.csv> <output.csv>")
+    main(sys.argv[1], sys.argv[2])
