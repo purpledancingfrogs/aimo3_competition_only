@@ -1,30 +1,20 @@
-﻿# Aureon Swarm Deterministic Convergence Proof
+﻿# AIMO-3 Deterministic Solver (DSS-Ω)
 
-This repository contains a fully auditable, deterministic swarm execution run.
+This solver is fully deterministic and audit-safe.
 
-## What is Proven
-- 50 independent agents executed parallel missions
-- Outputs were normalized and compared
-- Convergence measured via SHA256 hash identity
-- All artifacts are reproducible and independently verifiable
+## Properties
+- No randomness
+- No learning
+- No external calls
+- Rule-based dispatch only
 
-## How to Verify (Any LLM / Human)
-1. Clone this repo
-2. Recompute SHA256 hashes of all files
-3. Compare against PROOF_MANIFEST_SHA256.csv
-4. Re-run normalization + convergence scripts if desired
+## Supported Problem Classes
+- Arithmetic: sum, product, gcd, lcm, difference, ratio
+- Modular arithmetic
+- Integer exponentiation
+- Linear equations in one variable (x)
 
-## Key Artifacts
-- /agents/**/TASK.txt            — agent-assigned tasks
-- /logs/*.run.log                — raw execution logs
-- /normalized/*.norm.txt          — normalized outputs
-- convergence_matrix.csv          — pairwise hash comparison
-- convergence_summary.txt         — convergence counts
-- PROOF_MANIFEST_SHA256.csv       — global integrity ledger
-- RESULTS_BUNDLE.zip              — frozen audit bundle
+## Design
+parser → canonicalizer → deterministic dispatcher → arithmetic modules
 
-## Claim Boundary
-This demonstrates deterministic multi-agent convergence,
-not probabilistic sampling, hallucination, or prompt agreement.
-
-Reproducibility > persuasion.
+This design is intended to be fully inspectable and reproducible.
