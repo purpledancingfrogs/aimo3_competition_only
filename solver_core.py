@@ -45,7 +45,7 @@ def solve_linear_equation(p: str) -> int:
     # supports: x + a = b, a + x = b, ax = b, a*x = b
     p = p.replace("solve:", "").strip()
     lhs, rhs = p.split("=")
-    rhs = int(rhs.strip())
+    rhs = int(rhs.strip().replace(".", ""))
 
     lhs = lhs.replace(" ", "")
     if lhs == "x":
