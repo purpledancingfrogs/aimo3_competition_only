@@ -1,7 +1,4 @@
-from router import route
+﻿from router import solve
 
-def solve(problem):
-    try:
-        return route(problem)
-    except Exception:
-        return ""
+def meta_solve(problem):
+    return solve(problem)
