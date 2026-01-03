@@ -75,6 +75,7 @@ def dss_omega_solver(problem: str) -> int:
     p = normalize(problem)
 
     if p.startswith("solve"):
+        p = p.replace("solve:", "solve").replace("solve", "").strip()
         return solve_linear_equation(p)
 
     nums = extract_ints(p)
