@@ -1,114 +1,58 @@
 ﻿import re
 from fractions import Fraction
 
-_SAFE_EVAL_GLOBALS = {"__builtins__": None}
-
 class NTSolver:
     def __init__(self):
         pass
 
-    def _normalize(self, text: str) -> str:
+    def _normalize(self, text):
         if not text:
             return ""
-        # strip LaTeX wrappers + dollar math
         text = re.sub(r'\\\(|\\\)|\\\[|\\\]|\$', '', text)
-
-        # normalize common LaTeX ops / unicode minus
-        text = text.replace('\\times', '*').replace('\\cdot', '*')
-        text = text.replace('\u2212', '-')  # unicode minus
-
-        # drop common instruction scaffolding
-        text = re.sub(r'\bSolve\b', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bWhat\s+is\b', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\bfor\s*x\b\.?', '', text, flags=re.IGNORECASE)
-
-        # remove punctuation we don't need, collapse whitespace
-        text = text.replace('?', '').replace('.', '')
-        text = "".join(text.split())
-
+        text = re.sub(r'Solve|for x\.?|What is', '', text, flags=re.IGNORECASE)
+        text = text.replace('\\times', '*').replace('\\cdot', '*').replace('\u2212', '-')
+        text = text.replace(' ', '').replace('-', '+-').replace('*x', 'x')
+        if text.startswith('+-'):
+            text = text[1:]
         return text
 
-    def _safe_eval_num(self, s: str):
-        return eval(s, _SAFE_EVAL_GLOBALS, {})
-
-    def _parse_linear_lhs(self, lhs: str):
-        # returns (a,b) for lhs = a*x + b
-        # supports: 4+x, x+4, 2x-3, -x+2, 3*x+5, 4+2*x, etc.
-        if not lhs:
-            return None
-
-        # normalize implicit multiplication: "2x" -> "2*x"
-        lhs = re.sub(r'(\d)(x)\b', r'\1*\2', lhs, flags=re.IGNORECASE)
-
-        # split into signed terms: convert "-" into "+-" then split by "+"
-        s = lhs.replace('-', '+-')
-        parts = [p for p in s.split('+') if p != ""]
-
-        a = Fraction(0)
-        b = Fraction(0)
-
-        for term in parts:
-            term = term.strip()
-            if term == "":
-                continue
-
+    def _reduce_to_ab(self, expr):
+        a, b = Fraction(0), Fraction(0)
+        terms = [t for t in expr.split('+') if t]
+        for term in terms:
             if 'x' in term.lower():
-                t = term.lower().replace('x', '')
-                t = t.replace('*', '')
-                if t in ("", "+"):
-                    coef = Fraction(1)
-                elif t == "-":
-                    coef = Fraction(-1)
+                c = term.lower().replace('x', '')
+                if c == '' or c == '+':
+                    a += 1
+                elif c == '-':
+                    a -= 1
                 else:
-                    coef = Fraction(self._safe_eval_num(t))
-                a += coef
+                    try:
+                        a += Fraction(c)
+                    except Exception:
+                        pass
             else:
-                b += Fraction(self._safe_eval_num(term))
+                try:
+                    b += Fraction(term)
+                except Exception:
+                    pass
+        return a, b
 
-        return (a, b)
-
-    def _solve_linear(self, expr: str):
-        try:
-            if '=' not in expr:
-                # plain arithmetic
-                if 'x' in expr.lower():
-                    return None
-                v = self._safe_eval_num(expr)
-                if isinstance(v, bool):
-                    return int(v)
-                return int(v) if int(v) == v else v
-
-            lhs, rhs = expr.split('=', 1)
-            lhs = lhs.strip()
-            rhs = rhs.strip()
-
-            # normalize implicit multiplication in rhs too (rare)
-            rhs = re.sub(r'(\d)(x)\b', r'\1*\2', rhs, flags=re.IGNORECASE)
-
-            if 'x' in rhs.lower():
-                return None  # keep it simple/deterministic: only solve for x on LHS
-
-            parsed = self._parse_linear_lhs(lhs)
-            if not parsed:
-                return None
-            a, b = parsed
-            if a == 0:
-                return None
-
-            rhs_val = Fraction(self._safe_eval_num(rhs))
-            x = (rhs_val - b) / a
-
-            if x.denominator == 1:
-                return int(x.numerator)
-            return f"{x.numerator}/{x.denominator}"
-        except Exception:
-            return None
-
-    def solve(self, problem_text):
-        # guard: sometimes callers accidentally pass file paths
-        if isinstance(problem_text, str) and (problem_text.endswith(".csv") or problem_text.endswith(".parquet")):
+    def solve(self, problem):
+        if isinstance(problem, str) and (problem.endswith('.csv') or problem.endswith('.parquet')):
             return 0
-
-        t = self._normalize(problem_text)
-        out = self._solve_linear(t)
-        return out if out is not None else 0
+        clean = self._normalize(problem)
+        if '=' not in clean:
+            _, val = self._reduce_to_ab(clean)
+            return int(val) if val.denominator == 1 else f"{val.numerator}/{val.denominator}"
+        parts = clean.split('=')
+        if len(parts) != 2:
+            return 0
+        a1, b1 = self._reduce_to_ab(parts[0])
+        a2, b2 = self._reduce_to_ab(parts[1])
+        A = a1 - a2
+        B = b2 - b1
+        if A == 0:
+            return 0
+        ans = B / A
+        return int(ans) if ans.denominator == 1 else f"{ans.numerator}/{ans.denominator}"
