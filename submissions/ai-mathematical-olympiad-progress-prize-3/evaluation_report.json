@@ -1,14 +1,17 @@
 [
   {
     "id": "000aaa",
-    "answer": null,
-    "confidence": 0.0
+    "problem": "What is $1-1$?",
+    "prediction": 0
   },
   {
     "id": "111bbb",
-    "answer": null,
-    "confidence": 0.0
+    "problem": "What is $0\\times10$?",
+    "prediction": 0
   },
   {
     "id": "222ccc",
-    "answer": 
+    "problem": "Solve $4+x=4$ for $x$.",
+    "prediction": 0
+  }
+]
