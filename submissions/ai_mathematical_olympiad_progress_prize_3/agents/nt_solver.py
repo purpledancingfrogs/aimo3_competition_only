@@ -11,28 +11,27 @@ class NTSolver:
 
         # normalize latex / symbols
         t = t.replace('\\\\times', '*').replace('×', '*').replace('$', '')
+        t = t.replace('?', '').strip()
 
-        # explicit subtraction
-        if 'what is' in t:
-            m = re.search(r'(-?\d+)\s*-\s*(-?\d+)', t)
-            if m:
-                return int(m.group(1)) - int(m.group(2))
+        # subtraction
+        m = re.search(r'(-?\d+)\s*-\s*(-?\d+)', t)
+        if m:
+            return int(m.group(1)) - int(m.group(2))
 
         # multiplication
         m = re.search(r'(-?\d+)\s*\*\s*(-?\d+)', t)
         if m:
             return int(m.group(1)) * int(m.group(2))
 
-        # linear equation solve ax=b
-        if 'solve' in t and 'x' in t:
+        # linear equation solve ax=b or ax=c
+        if 'solve' in t and 'x' in t and '=' in t:
             try:
                 x = symbols('x')
                 expr = re.sub(r'[^0-9x=+\-*/]', '', t)
-                if '=' in expr:
-                    lhs, rhs = expr.split('=')
-                    sol = solve(Eq(parse_expr(lhs), parse_expr(rhs)), x)
-                    if sol:
-                        return int(sol[0])
+                lhs, rhs = expr.split('=')
+                sol = solve(Eq(parse_expr(lhs), parse_expr(rhs)), x)
+                if sol:
+                    return int(sol[0])
             except:
                 return None
 
