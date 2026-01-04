@@ -72,36 +72,40 @@ class Solver:
     def solve(self, problem):
         p = problem.lower()
 
-        # --- Combinatorics ---
-        if any(k in p for k in ["how many ways", "choose", "combination"]):
-            nums = list(map(int, re.findall(r"\d+", p)))
-            if len(nums) >= 2:
-                return nCr(max(nums), min(nums))
-
-        # --- Modular / CRT ---
-        if "mod" in p or "remainder" in p or "=" in p:
-            mods = re.findall(r"x\s*=\s*(\d+)\s*\(mod\s*(\d+)\)", p)
-            if mods:
-                congruences = [(int(r), int(m)) for r, m in mods]
-                res = crt(congruences)
-                if res is not None:
-                    return res
-
-        # --- Prime factorization ---
-        if "prime factor" in p:
-            nums = list(map(int, re.findall(r"\d+", p)))
-            if nums:
-                pf = prime_factors(nums[0])
-                out = []
-                for k in sorted(pf):
-                    out.append(f"{k}^{pf[k]}")
-                return "*".join(out)
-
-        # --- Geometry distance ---
+        # geometry: distance squared
         if "distance" in p:
             nums = list(map(int, re.findall(r"-?\d+", p)))
             if len(nums) == 4:
-                return dist_sq(nums[0], nums[1], nums[2], nums[3])
+                x1, y1, x2, y2 = nums
+                return (x1 - x2)**2 + (y1 - y2)**2
+
+        # linear equation ax+b=0
+        m = re.match(r"([+-]?\d*)x([+-]\d+)=0", p.replace(" ", ""))
+        if m:
+            a = int(m.group(1) or 1)
+            b = int(m.group(2))
+            return Fraction(-b, a)
+
+        # CRT
+        matches = re.findall(r"x\s*=\s*(\d+)\s*\(mod\s*(\d+)\)", p)
+        if matches:
+            congruences = [(int(r), int(m)) for r, m in matches]
+            res = crt(congruences)
+            if res is not None:
+                return res
+
+        # prime factorization
+        if "prime factor" in p:
+            nums = re.findall(r"\d+", p)
+            if nums:
+                pf = prime_factors(int(nums[0]))
+                return "*".join(f"{k}^{v}" for k, v in sorted(pf.items()))
+
+        # combinatorics
+        if "choose" in p or "how many ways" in p:
+            nums = list(map(int, re.findall(r"\d+", p)))
+            if len(nums) >= 2:
+                return nCr(max(nums), min(nums))
 
         return 0
 
@@ -166,18 +170,40 @@ class Solver:
     def solve(self, problem):
         p = problem.lower()
 
-        # --- CRT ---
-        congruences = _extract_crt(p)
-        if congruences:
+        # geometry: distance squared
+        if "distance" in p:
+            nums = list(map(int, re.findall(r"-?\d+", p)))
+            if len(nums) == 4:
+                x1, y1, x2, y2 = nums
+                return (x1 - x2)**2 + (y1 - y2)**2
+
+        # linear equation ax+b=0
+        m = re.match(r"([+-]?\d*)x([+-]\d+)=0", p.replace(" ", ""))
+        if m:
+            a = int(m.group(1) or 1)
+            b = int(m.group(2))
+            return Fraction(-b, a)
+
+        # CRT
+        matches = re.findall(r"x\s*=\s*(\d+)\s*\(mod\s*(\d+)\)", p)
+        if matches:
+            congruences = [(int(r), int(m)) for r, m in matches]
             res = crt(congruences)
             if res is not None:
                 return res
 
-        # --- Prime Factorization ---
-        n = _extract_prime_factor_target(p)
-        if n is not None:
-            pf = prime_factors(n)
-            return "*".join(f"{k}^{v}" for k, v in sorted(pf.items()))
+        # prime factorization
+        if "prime factor" in p:
+            nums = re.findall(r"\d+", p)
+            if nums:
+                pf = prime_factors(int(nums[0]))
+                return "*".join(f"{k}^{v}" for k, v in sorted(pf.items()))
+
+        # combinatorics
+        if "choose" in p or "how many ways" in p:
+            nums = list(map(int, re.findall(r"\d+", p)))
+            if len(nums) >= 2:
+                return nCr(max(nums), min(nums))
 
         return 0
 # === AIMO-3 EXPANSION: GEOMETRY DISPATCH (EXACT) ===
@@ -277,4 +303,5 @@ class Solver(Solver):
             return (x1 - x2)**2 + (y1 - y2)**2
 
         return super().solve(problem)
+
 
