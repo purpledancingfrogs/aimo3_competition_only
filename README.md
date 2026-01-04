@@ -1,13 +1,8 @@
-﻿AIMO-3 COMPLIANCE SUBMISSION
+AIMO-3 compliant submission.
 
-Files present:
-- solver.py        : single deterministic solver (stdlib only)
-- run.py           : single entrypoint (CSV in → CSV out)
-- input.csv        : example input schema
-- requirements.txt : empty (stdlib only)
+Tracked files:
+- run.py (single entrypoint)
+- solver.py (deterministic stdlib-only solver)
+- requirements.txt (empty)
 
-No swarm.
-No routing.
-No logging.
-No side effects.
-Deterministic execution.
+No other files are part of this submission.
