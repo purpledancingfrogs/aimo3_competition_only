@@ -198,7 +198,6 @@ class Solver(Solver):
             return (x1 - x2)**2 + (y1 - y2)**2
 
         return super().solve(problem)
-# === AIMO-3 EXPANSION: ALGEBRA DISPATCH (LINEAR / QUADRATIC) ===
 
 import re
 from fractions import Fraction
@@ -209,7 +208,6 @@ def _solve_linear(a, b):
         return None
     return Fraction(-b, a)
 
-def _solve_quadratic(a, b, c):
     # ax^2 + bx + c = 0 (exact, discriminant check)
     if a == 0:
         return _solve_linear(b, c)
@@ -236,13 +234,11 @@ class Solver(Solver):
             if res is not None:
                 return res
 
-        # quadratic ax^2+bx+c=0
         m = re.match(r'([+-]?\d*)x\^2([+-]\d*)x([+-]\d+)=0', p)
         if m:
             a = int(m.group(1) or 1)
             b = int(m.group(2) or 1)
             c = int(m.group(3))
-            res = _solve_quadratic(a, b, c)
             if res is not None:
                 return res
 
