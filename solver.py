@@ -1,101 +1,109 @@
-﻿import re
+import re
 import math
 from fractions import Fraction
 from collections import defaultdict
 
-class Polynomial:
-    def __init__(self, terms=None):
-        self.terms = defaultdict(Fraction)
-        if terms:
-            for d, v in terms.items():
-                if v != 0: self.terms[d] = Fraction(v)
-    def __add__(self, o):
-        res = defaultdict(Fraction, self.terms)
-        for d, v in o.terms.items(): res[d] += v
-        return Polynomial(res)
-    def __sub__(self, o):
-        res = defaultdict(Fraction, self.terms)
-        for d, v in o.terms.items(): res[d] -= v
-        return Polynomial(res)
-    def __mul__(self, o):
-        res = defaultdict(Fraction)
-        for d1, v1 in self.terms.items():
-            for d2, v2 in o.terms.items():
-                res[d1 + d2] += v1 * v2
-        return Polynomial(res)
-    def degree(self):
-        return max(self.terms.keys()) if self.terms else 0
+# =========================
+# Exact Number Theory Core
+# =========================
+
+def egcd(a, b):
+    if b == 0:
+        return a, 1, 0
+    g, x1, y1 = egcd(b, a % b)
+    return g, y1, x1 - (a // b) * y1
 
 def mod_inverse(a, m):
-    m0, y, x = m, 0, 1
-    if m == 1: return 0
-    while a > 1:
-        q = a // m
-        t = m
-        m = a % m
-        a = t
-        t = y
-        y = x - q * y
-        x = t
-    return x + m0 if x < 0 else x
+    g, x, _ = egcd(a, m)
+    if g != 1:
+        return None
+    return x % m
+
+def crt(congruences):
+    x, m = 0, 1
+    for r, mod in congruences:
+        inv = mod_inverse(m, mod)
+        if inv is None:
+            return None
+        x = (r - x) * inv % mod * m + x
+        m *= mod
+        x %= m
+    return x
+
+def prime_factors(n):
+    factors = defaultdict(int)
+    d = 2
+    while d * d <= n:
+        while n % d == 0:
+            factors[d] += 1
+            n //= d
+        d += 1 if d == 2 else 2
+    if n > 1:
+        factors[n] += 1
+    return dict(factors)
+
+# =========================
+# Exact Combinatorics
+# =========================
+
+def nCr(n, r):
+    if r < 0 or r > n:
+        return 0
+    r = min(r, n - r)
+    num = 1
+    den = 1
+    for i in range(1, r + 1):
+        num *= n - r + i
+        den *= i
+    return num // den
+
+# =========================
+# Geometry (Exact Analytic)
+# =========================
+
+def dist_sq(x1, y1, x2, y2):
+    return (x1 - x2)**2 + (y1 - y2)**2
+
+# =========================
+# Solver
+# =========================
 
 class Solver:
-    def __init__(self):
-        self.prec = {'+':1,'-':1,'*':2,'/':2,'^':3}
-    def _tokenize(self, expr):
-        expr = expr.replace(' ','').replace('**','^').replace('\\times','*').replace('\\cdot','*')
-        expr = re.sub(r'(\d)(x)', r'\1*\2', expr)
-        return re.findall(r'\d+\.\d+|\d+|x|[\+\-\*\/\(\)\^]', expr)
-    def _parse(self, tokens):
-        ops, values = [], []
-        def apply():
-            if len(values) < 2: return
-            op = ops.pop()
-            r,l = values.pop(), values.pop()
-            if op=='+': values.append(l+r)
-            elif op=='-': values.append(l-r)
-            elif op=='*': values.append(l*r)
-            elif op=='/': values.append(l*(Polynomial({0:1})/r if r.degree()==0 else Polynomial({0:0})))
-        for i,t in enumerate(tokens):
-            if t=='(': ops.append(t)
-            elif t==')':
-                while ops and ops[-1]!='(': apply()
-                ops.pop()
-            elif t in self.prec:
-                if t=='-' and (i==0 or tokens[i-1] in '(+-*/'):
-                    values.append(Polynomial({0:0}))
-                while ops and ops[-1]!='(' and self.prec.get(ops[-1],0)>=self.prec[t]: apply()
-                ops.append(t)
-            elif t=='x': values.append(Polynomial({1:1}))
-            else: values.append(Polynomial({0:Fraction(t)}))
-        while ops: apply()
-        return values[0] if values else Polynomial({0:0})
     def solve(self, problem):
-        try:
-            mod_match = re.search(r'mod(?:ulo)?\s*(\d+)', problem, re.I)
-            mod_val = int(mod_match.group(1)) if mod_match else None
-            clean = re.sub(r'\\\(|\\\)|\\\[|\\\]|\$|Solve|for x|What is','',problem,flags=re.I)
-            if '=' in clean:
-                lhs,rhs = clean.split('=')
-                poly = self._parse(self._tokenize(lhs)) - self._parse(self._tokenize(rhs))
-                deg = poly.degree()
-                if deg==1:
-                    a,b = poly.terms[1], poly.terms[0]
-                    ans = -b/a
-                    if mod_val: return (int(-b.numerator)*mod_inverse(int(a.numerator),mod_val))%mod_val
-                elif deg==2:
-                    a,b,c = poly.terms[2], poly.terms[1], poly.terms[0]
-                    disc = b*b - 4*a*c
-                    root_disc = math.isqrt(int(disc))
-                    ans = (-b + root_disc)/(2*a)
-                else: ans=0
-            else:
-                ans = self._parse(self._tokenize(clean)).terms[0]
-            return int(ans) if isinstance(ans,Fraction) and ans.denominator==1 else str(ans)
-        except: return 0
+        p = problem.lower()
 
-def solve(problem:str): return Solver().solve(problem)
-# === AIMO-3 EXTENSION PLACEHOLDER ===
-# CRT_SOLVER: Chinese Remainder Theorem (deterministic, exact)
-# PRIME_FACTORIZATION: integer-only, sqrt(n) bounded
-# GEOMETRY_ANALYTIC: exact coordinate geometry
+        # --- Combinatorics ---
+        if any(k in p for k in ["how many ways", "choose", "combination"]):
+            nums = list(map(int, re.findall(r"\d+", p)))
+            if len(nums) >= 2:
+                return nCr(max(nums), min(nums))
+
+        # --- Modular / CRT ---
+        if "mod" in p or "remainder" in p or "=" in p:
+            mods = re.findall(r"x\s*=\s*(\d+)\s*\(mod\s*(\d+)\)", p)
+            if mods:
+                congruences = [(int(r), int(m)) for r, m in mods]
+                res = crt(congruences)
+                if res is not None:
+                    return res
+
+        # --- Prime factorization ---
+        if "prime factor" in p:
+            nums = list(map(int, re.findall(r"\d+", p)))
+            if nums:
+                pf = prime_factors(nums[0])
+                out = []
+                for k in sorted(pf):
+                    out.append(f"{k}^{pf[k]}")
+                return "*".join(out)
+
+        # --- Geometry distance ---
+        if "distance" in p:
+            nums = list(map(int, re.findall(r"-?\d+", p)))
+            if len(nums) == 4:
+                return dist_sq(nums[0], nums[1], nums[2], nums[3])
+
+        return 0
+
+def solve(problem):
+    return Solver().solve(problem)
