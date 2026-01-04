@@ -1,2 +1,5 @@
 ﻿id,problem
-000aaa,Solve 2*(x+3)=14
+001,"Solve 3*x + 7 = 22"
+002,"What is 4x mod 11 = 1"
+003,"How many ways to choose 2 items from 5?"
+004,"Solve (x-3)*(x+3) = 0"
