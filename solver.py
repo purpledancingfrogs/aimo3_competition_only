@@ -145,3 +145,38 @@ def crt(congruences):
         m *= mod
         x %= m
     return x
+# === AIMO-3 DISPATCH INTEGRATION: NUMBER THEORY ===
+
+import re
+
+def _extract_crt(problem):
+    matches = re.findall(r'x\s*=\s*(-?\d+)\s*\(mod\s*(\d+)\)', problem)
+    if matches:
+        return [(int(r), int(m)) for r, m in matches]
+    return None
+
+def _extract_prime_factor_target(problem):
+    if 'prime factor' in problem.lower():
+        nums = re.findall(r'\d+', problem)
+        if nums:
+            return int(nums[0])
+    return None
+
+class Solver:
+    def solve(self, problem):
+        p = problem.lower()
+
+        # --- CRT ---
+        congruences = _extract_crt(p)
+        if congruences:
+            res = crt(congruences)
+            if res is not None:
+                return res
+
+        # --- Prime Factorization ---
+        n = _extract_prime_factor_target(p)
+        if n is not None:
+            pf = prime_factors(n)
+            return "*".join(f"{k}^{v}" for k, v in sorted(pf.items()))
+
+        return 0
