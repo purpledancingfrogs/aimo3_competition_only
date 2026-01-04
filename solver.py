@@ -121,3 +121,27 @@ def prime_factors(n):
     if n > 1:
         f[n] += 1
     return dict(f)
+# === AIMO-3 EXPANSION: CHINESE REMAINDER THEOREM ===
+
+def egcd(a, b):
+    if b == 0:
+        return a, 1, 0
+    g, x1, y1 = egcd(b, a % b)
+    return g, y1, x1 - (a // b) * y1
+
+def mod_inverse(a, m):
+    g, x, _ = egcd(a, m)
+    if g != 1:
+        return None
+    return x % m
+
+def crt(congruences):
+    x, m = 0, 1
+    for r, mod in congruences:
+        inv = mod_inverse(m, mod)
+        if inv is None:
+            return None
+        x = (r - x) * inv % mod * m + x
+        m *= mod
+        x %= m
+    return x
