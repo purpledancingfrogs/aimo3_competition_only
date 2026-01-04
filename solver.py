@@ -95,3 +95,7 @@ class Solver:
         except: return 0
 
 def solve(problem:str): return Solver().solve(problem)
+# === AIMO-3 EXTENSION PLACEHOLDER ===
+# CRT_SOLVER: Chinese Remainder Theorem (deterministic, exact)
+# PRIME_FACTORIZATION: integer-only, sqrt(n) bounded
+# GEOMETRY_ANALYTIC: exact coordinate geometry
