@@ -244,3 +244,36 @@ class Solver(Solver):
 
         return super().solve(problem)
 
+# === AIMO-3 FIX: COMBINATORICS + GEOMETRY DISPATCH ===
+
+def _extract_nCr(problem):
+    p = problem.lower()
+    if 'choose' in p or 'how many ways' in p:
+        nums = list(map(int, re.findall(r'\d+', p)))
+        if len(nums) >= 2:
+            return max(nums), min(nums)
+    return None
+
+def _extract_distance(problem):
+    p = problem.lower()
+    if 'distance' in p:
+        nums = list(map(int, re.findall(r'-?\d+', p)))
+        if len(nums) == 4:
+            return nums
+    return None
+
+class Solver(Solver):
+    def solve(self, problem):
+        # combinatorics
+        comb = _extract_nCr(problem)
+        if comb:
+            n, r = comb
+            return nCr(n, r)
+
+        # geometry: distance squared
+        dist = _extract_distance(problem)
+        if dist:
+            x1, y1, x2, y2 = dist
+            return (x1 - x2)**2 + (y1 - y2)**2
+
+        return super().solve(problem)
