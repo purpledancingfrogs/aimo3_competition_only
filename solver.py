@@ -221,7 +221,7 @@ def _solve_quadratic(a, b, c):
         return None
     r1 = Fraction(-b + s, 2*a)
     r2 = Fraction(-b - s, 2*a)
-    return r1 if r1 == r2 else f\"{r1},{r2}\"
+    return r1 if r1 == r2 else str(r1) + "," + str(r2)
 
 class Solver(Solver):
     def solve(self, problem):
