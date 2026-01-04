@@ -243,3 +243,4 @@ class Solver(Solver):
                 return res
 
         return super().solve(problem)
+
