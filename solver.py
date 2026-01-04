@@ -107,3 +107,17 @@ class Solver:
 
 def solve(problem):
     return Solver().solve(problem)
+# === AIMO-3 EXPANSION: NUMBER THEORY CORE ===
+from collections import defaultdict
+
+def prime_factors(n):
+    f = defaultdict(int)
+    d = 2
+    while d * d <= n:
+        while n % d == 0:
+            f[d] += 1
+            n //= d
+        d += 1 if d == 2 else 2
+    if n > 1:
+        f[n] += 1
+    return dict(f)
