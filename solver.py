@@ -180,3 +180,21 @@ class Solver:
             return "*".join(f"{k}^{v}" for k, v in sorted(pf.items()))
 
         return 0
+# === AIMO-3 EXPANSION: GEOMETRY DISPATCH (EXACT) ===
+
+def _extract_distance(problem):
+    if 'distance' in problem.lower():
+        nums = re.findall(r'-?\d+', problem)
+        if len(nums) == 4:
+            return tuple(map(int, nums))
+    return None
+
+class Solver(Solver):
+    def solve(self, problem):
+        # geometry: distance squared
+        dist_args = _extract_distance(problem)
+        if dist_args:
+            x1, y1, x2, y2 = dist_args
+            return (x1 - x2)**2 + (y1 - y2)**2
+
+        return super().solve(problem)
