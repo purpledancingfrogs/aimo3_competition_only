@@ -505,3 +505,4 @@ if __name__ == "__main__":
         ans = "0"
     sys.stdout.write(str(ans).strip() + "\n")
 
+
