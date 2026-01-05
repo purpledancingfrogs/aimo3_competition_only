@@ -39,3 +39,4 @@ kaggle_kernel_output/
 AIMO3_SUBMISSION.zip
 audit/*.zip
 kaggle_kernel_src/
+**pycache**/

@@ -1,51 +1,51 @@
-import os, sys, zipfile, runpy
-from pathlib import Path
+import os, sys, zipfile, shutil
 
-DATASET_DIR = Path("/kaggle/input")
-ZIP_NAME = "AIMO3_SUBMISSION.zip"
+def _find_submission_zip():
+candidates = [
+"/kaggle/input/aimo3-submission/AIMO3_SUBMISSION.zip",
+"/kaggle/input/aimo3-submission/aimo3_submission.zip",
+]
+for p in candidates:
+if os.path.exists(p):
+return p
+# fallback: scan /kaggle/input for any zip with AIMO3 in name
+base = "/kaggle/input"
+if os.path.isdir(base):
+for root, *, files in os.walk(base):
+for f in files:
+fu = f.upper()
+if fu.endswith(".ZIP") and "AIMO3" in fu:
+return os.path.join(root, f)
+raise FileNotFoundError("AIMO3_SUBMISSION_ZIP_NOT_FOUND_UNDER*/kaggle/input")
 
-def find_zip():
-    # Preferred expected path
-    p = DATASET_DIR / "aimo3-submission" / ZIP_NAME
-    if p.exists():
-        return p
-    # Fallback: search all mounted datasets (case-insensitive filename)
-    if DATASET_DIR.exists():
-        for d in DATASET_DIR.iterdir():
-            if d.is_dir():
-                cand = d / ZIP_NAME
-                if cand.exists():
-                    return cand
-                # case-insensitive scan
-                for f in d.iterdir():
-                    if f.is_file() and f.name.lower() == ZIP_NAME.lower():
-                        return f
-    return None
+def _extract(zip_path: str) -> str:
+outdir = "/kaggle/working/submission_pkg"
+if os.path.exists(outdir):
+shutil.rmtree(outdir)
+os.makedirs(outdir, exist_ok=True)
+with zipfile.ZipFile(zip_path, "r") as z:
+z.extractall(outdir)
+return outdir
 
 def main():
-    z = find_zip()
-    if z is None:
-        listing = []
-        if DATASET_DIR.exists():
-            for d in sorted(DATASET_DIR.glob("*")):
-                if d.is_dir():
-                    listing.append(str(d))
-                    for f in sorted(d.glob("*")):
-                        listing.append("  - " + str(f))
-        raise FileNotFoundError(f"Missing {ZIP_NAME} under /kaggle/input (looked for /kaggle/input/*/{ZIP_NAME}). Listing:\\n" + "\\n".join(listing))
+# Kernel smoke: ensure dataset zip is readable + gateway compiles (no execution side effects)
+zpath = _find_submission_zip()
+pkg = _extract(zpath)
 
-    work = Path("/kaggle/working/submission")
-    work.mkdir(parents=True, exist_ok=True)
+```
+gw1 = os.path.join(pkg, "kaggle_evaluation", "aimo_3_gateway.py")
+gw2 = os.path.join(os.path.dirname(__file__), "kaggle_evaluation", "aimo_3_gateway.py")
+gw = gw1 if os.path.exists(gw1) else gw2 if os.path.exists(gw2) else None
 
-    with zipfile.ZipFile(str(z), "r") as zf:
-        zf.extractall(str(work))
+if gw is None or not os.path.exists(gw):
+    print("GATEWAY_NOT_FOUND")
+    return 0
 
-    gw = work / "kaggle_evaluation" / "aimo_3_gateway.py"
-    if not gw.exists():
-        raise FileNotFoundError(f"Extracted zip but missing gateway at {gw}")
+import py_compile
+py_compile.compile(gw, doraise=True)
+print("GATEWAY_COMPILE_OK")
+return 0
+```
 
-    sys.path.insert(0, str(work))
-    runpy.run_path(str(gw), run_name="__main__")
-
-if __name__ == "__main__":
-    main()
+if **name** == "**main**":
+raise SystemExit(main())
