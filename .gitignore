@@ -25,3 +25,11 @@ audit/report/
 *.bak
 audit/**/*.zip
 # local residue (never commit)
+
+kaggle_submit_export/
+
+kaggle_submit_export.zip
+
+submission.csv
+
+audit/self_audit/
