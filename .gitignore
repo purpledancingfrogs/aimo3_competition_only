@@ -18,3 +18,7 @@ kaggle_data/
 !audit/*.zip
 audit/reports/misses.jsonl
 audit/reports/misses_summary.md
+
+# generated debug artifacts
+audit/report/
+
