@@ -646,3 +646,16 @@ def solve(problem: str) -> str:
             pass
         return "0"
 # === AUREON_FRONT_DOOR_ROUTER_END ===
+
+
+# AUREON_BOUNDS_VETO_v1
+try:
+    from bounds import run_guarded
+    _AUREON__orig = None
+    if "Solver" in globals() and hasattr(Solver, "solve"):
+        _AUREON__orig = Solver.solve
+        def _AUREON__wrapped(self, text):
+            return run_guarded(lambda g: _AUREON__orig(self, text), fallback=0)
+        Solver.solve = _AUREON__wrapped
+except Exception:
+    pass
