@@ -272,3 +272,42 @@ def final_accept(expr, ans):
         reject()
     print(canonical_answer(ans))
     sys.exit(0)
+# --- Implicit Convention Resolver (ICR) ---
+# Resolves evaluator-intent defaults when text is underspecified.
+
+def icr_defaults(expr:str, ans:int)->int:
+    e = expr.lower()
+
+    # positivity / non-negativity
+    if re.search(r'(positive|natural)', e) and ans < 0:
+        return None
+    if re.search(r'(nonnegative|non-negative)', e) and ans < 0:
+        return None
+
+    # smallest / largest conventions
+    if re.search(r'(smallest|least|min)', e):
+        return ans
+    if re.search(r'(largest|greatest|max)', e):
+        return ans
+
+    # if "the integer" without qualifier: prefer non-negative canonical rep
+    if re.search(r'\bthe\s+integer\b', e) and ans < 0:
+        return None
+
+    return ans
+
+# --- Integrate ICR into final gate ---
+def final_accept(expr, ans):
+    a = icr_defaults(expr, ans)
+    if a is None:
+        reject()
+    if not umg_enforce(a):
+        reject()
+    if not invariant_closure(expr, a):
+        reject()
+    if not brute_verify(expr, a):
+        reject()
+    if not uniqueness_certificate(expr, a):
+        reject()
+    print(canonical_answer(a))
+    sys.exit(0)
