@@ -1,3 +1,4 @@
-﻿commit=c18f004fa3941eeca081d90633aa418cc11b166b
+﻿frozen_tag=aimo3-submission-ready
+frozen_branch=aimo3-kaggle-submit
 audit_zip=AIMO3_Competition_Final_Audit_Bundle.zip
 sha256=2C64C15009790B6C6ACF64A6912888E02E5709554E6F41455DDFCA27B4787DE2
