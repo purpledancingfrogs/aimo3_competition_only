@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import sys
 import math
+import ast
 from fractions import Fraction
 
 try:
@@ -12,7 +13,6 @@ try:
 except Exception:
     sp = None
 
-_INT_RE = re.compile(r'[-+]?\d+')
 _LATEX_FRAC = re.compile(r'\\frac\{([^{}]+)\}\{([^{}]+)\}')
 _LATEX_BINOM = re.compile(r'\\binom\{([^{}]+)\}\{([^{}]+)\}')
 _LATEX_TIMES = re.compile(r'\\cdot|\\times')
@@ -48,28 +48,28 @@ def _clean_text(s: str) -> str:
     s = s.replace('–', '-').replace('−', '-').replace('×', '*').replace('·', '*')
     return s
 
-def _safe_int(x) -> int:
-    if isinstance(x, bool):
-        return int(x)
-    if isinstance(x, int):
-        return x
-    if isinstance(x, Fraction):
-        if x.denominator == 1:
-            return int(x.numerator)
-        return int(math.floor(x))
+def _safe_int(v) -> int:
+    if isinstance(v, bool):
+        return int(v)
+    if isinstance(v, int):
+        return v
+    if isinstance(v, Fraction):
+        if v.denominator == 1:
+            return int(v.numerator)
+        return int(math.floor(v.numerator / v.denominator))
     try:
-        if sp is not None and isinstance(x, sp.Basic):
-            if x.is_integer is True:
-                return int(x)
-            if x.is_Rational:
-                return int(sp.floor(x))
+        if sp is not None and isinstance(v, sp.Basic):
+            if v.is_integer is True:
+                return int(v)
+            if v.is_Rational:
+                return int(sp.floor(v))
     except Exception:
         pass
     try:
-        xf = float(x)
-        if abs(xf - round(xf)) < 1e-12:
-            return int(round(xf))
-        return int(math.floor(xf))
+        fv = float(v)
+        if abs(fv - round(fv)) < 1e-12:
+            return int(round(fv))
+        return int(math.floor(fv))
     except Exception:
         return 0
 
@@ -78,50 +78,118 @@ def _C(n: int, k: int) -> int:
         return 0
     return math.comb(n, k)
 
+def _eval_ast(expr: str) -> Fraction:
+    node = ast.parse(expr, mode="eval")
+
+    def ev(n) -> Fraction:
+        if isinstance(n, ast.Expression):
+            return ev(n.body)
+        if isinstance(n, ast.Constant):
+            if isinstance(n.value, (int, bool)):
+                return Fraction(int(n.value), 1)
+            raise ValueError("bad const")
+        if isinstance(n, ast.UnaryOp):
+            v = ev(n.operand)
+            if isinstance(n.op, ast.UAdd):
+                return v
+            if isinstance(n.op, ast.USub):
+                return -v
+            raise ValueError("bad unary")
+        if isinstance(n, ast.BinOp):
+            a = ev(n.left)
+            b = ev(n.right)
+            if isinstance(n.op, ast.Add):
+                return a + b
+            if isinstance(n.op, ast.Sub):
+                return a - b
+            if isinstance(n.op, ast.Mult):
+                return a * b
+            if isinstance(n.op, ast.Div):
+                if b == 0:
+                    raise ZeroDivisionError
+                return a / b
+            if isinstance(n.op, ast.Pow):
+                if b.denominator != 1:
+                    raise ValueError("non-integer exponent")
+                e = int(b.numerator)
+                if abs(e) > 4096:
+                    raise ValueError("exp too large")
+                if e >= 0:
+                    return a ** e
+                if a == 0:
+                    raise ZeroDivisionError
+                return Fraction(1, 1) / (a ** (-e))
+            if isinstance(n.op, ast.Mod):
+                if b == 0:
+                    raise ZeroDivisionError
+                if a.denominator != 1 or b.denominator != 1:
+                    raise ValueError("mod needs ints")
+                return Fraction(int(a.numerator) % int(b.numerator), 1)
+            raise ValueError("bad binop")
+        if isinstance(n, ast.Call):
+            if not isinstance(n.func, ast.Name):
+                raise ValueError("bad call")
+            fname = n.func.id
+            args = [ev(a) for a in n.args]
+            if fname == "gcd":
+                if len(args) != 2:
+                    raise ValueError("gcd arity")
+                return Fraction(math.gcd(int(args[0]), int(args[1])), 1)
+            if fname == "lcm":
+                if len(args) != 2:
+                    raise ValueError("lcm arity")
+                a0 = int(args[0]); b0 = int(args[1])
+                if a0 == 0 or b0 == 0:
+                    return Fraction(0, 1)
+                return Fraction(abs(a0 // math.gcd(a0, b0) * b0), 1)
+            if fname == "C":
+                if len(args) != 2:
+                    raise ValueError("C arity")
+                return Fraction(_C(int(args[0]), int(args[1])), 1)
+            if fname == "floor":
+                if len(args) != 1:
+                    raise ValueError("floor arity")
+                x = args[0]
+                return Fraction(math.floor(x.numerator / x.denominator), 1)
+            if fname == "ceil":
+                if len(args) != 1:
+                    raise ValueError("ceil arity")
+                x = args[0]
+                return Fraction(math.ceil(x.numerator / x.denominator), 1)
+            if fname == "abs":
+                if len(args) != 1:
+                    raise ValueError("abs arity")
+                return abs(args[0])
+            raise ValueError("bad func")
+        raise ValueError("bad node")
+
+    return ev(node)
+
 def _safe_eval_expr(expr: str) -> Fraction | int:
     expr = expr.strip()
     if not expr:
-        raise ValueError("empty expr")
-
-    # Coerce all integer literals to Fraction to keep exact arithmetic under "/".
-    def repl_int(m: re.Match) -> str:
-        return f"F({m.group(0)},1)"
-    expr_frac = re.sub(r'(?<![A-Za-z_])[-+]?\d+(?![A-Za-z_])', repl_int, expr)
-
-    allowed = {
-        "F": Fraction,
-        "gcd": lambda a, b: Fraction(math.gcd(int(a), int(b)), 1),
-        "lcm": lambda a, b: Fraction(abs(int(a) // math.gcd(int(a), int(b)) * int(b)) if int(a) and int(b) else 0, 1),
-        "C": lambda n, k: Fraction(_C(int(n), int(k)), 1),
-        "floor": lambda x: Fraction(math.floor(float(x)), 1),
-        "ceil": lambda x: Fraction(math.ceil(float(x)), 1),
-        "abs": lambda x: Fraction(abs(float(x)), 1),
-    }
-    val = eval(expr_frac, {"__builtins__": {}}, allowed)  # noqa: S307
-    if isinstance(val, Fraction):
-        if val.denominator == 1:
-            return int(val.numerator)
-        return val
-    if isinstance(val, int):
-        return val
-    return Fraction(float(val)).limit_denominator()
+        raise ValueError("empty")
+    expr = expr.replace(",", "")
+    v = _eval_ast(expr)
+    if v.denominator == 1:
+        return int(v.numerator)
+    return v
 
 def _extract_arith_candidate(s: str) -> str | None:
-    # Prefer expressions introduced by keywords.
-    m = re.search(r'(?:what\s+is|compute|evaluate|simplify|calculate|find)\s*[:\-]?\s*([0-9\(\)\s\+\-\*\/\^\.,]+)\??',
+    # capture until end-of-sentence punctuation or newline
+    m = re.search(r'(?:what\s+is|compute|evaluate|simplify|calculate)\s*[:\-]?\s*(.+?)(?:[?\.\n]|$)',
                   s, re.IGNORECASE | re.DOTALL)
     if m:
-        expr = m.group(1).replace(',', '').strip().rstrip('.').rstrip('?').rstrip('!').strip()
+        expr = m.group(1).strip()
+        expr = expr.rstrip('?').rstrip('.').rstrip('!').strip()
         if expr:
             return expr
 
-    # Fallback: find a maximal operator-containing numeric expression anywhere.
-    # Guardrails: no letters, short, must contain an operator and >= 2 numbers.
+    # fallback: longest operator-containing numeric expression
     best = None
     for mm in re.finditer(r'[-+*/^()\d\s\.,]{5,}', s):
-        cand = mm.group(0)
-        cand = cand.replace(',', '').strip().rstrip('.').rstrip('?').rstrip('!').strip()
-        if not cand or len(cand) > 220:
+        cand = mm.group(0).replace(",", "").strip().rstrip('.').rstrip('?').rstrip('!').strip()
+        if not cand or len(cand) > 240:
             continue
         compact = re.sub(r'\s+', '', cand)
         if re.search(r'[A-Za-z_\\]', compact):
@@ -143,6 +211,14 @@ def _try_simple_arithmetic(s: str) -> int | None:
         v = _safe_eval_expr(expr)
         return _safe_int(v)
     except Exception:
+        # if sympy is available, try as last resort for arithmetic only
+        if sp is not None:
+            try:
+                vv = sp.sympify(expr, locals={"C": sp.binomial, "floor": sp.floor, "ceil": sp.ceiling})
+                if vv.is_Number:
+                    return _safe_int(vv)
+            except Exception:
+                pass
         return None
 
 def _try_linear_equation(s: str) -> int | None:
@@ -164,6 +240,7 @@ def _try_linear_equation(s: str) -> int | None:
         except Exception:
             pass
 
+    # very small fallback: ax+b=c
     expr = (left + " = " + right).replace(' ', '').replace('*', '')
     parts = expr.split('=')
     if len(parts) != 2:
@@ -207,7 +284,8 @@ def _try_linear_equation(s: str) -> int | None:
     return int(math.floor(b / a))
 
 def _try_remainder(s: str) -> int | None:
-    m = re.search(r'remainder\s+when\s+(.+?)\s+is\s+divided\s+by\s+(.+?)[\.\?]', s, re.IGNORECASE | re.DOTALL)
+    m = re.search(r'remainder\s+when\s+(.+?)\s+is\s+divided\s+by\s+(.+?)(?:[\.?\n]|$)',
+                  s, re.IGNORECASE | re.DOTALL)
     if not m:
         return None
     a_txt = _clean_text(m.group(1))
