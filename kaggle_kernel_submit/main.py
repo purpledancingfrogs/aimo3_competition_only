@@ -1,39 +1,51 @@
 import os, sys, zipfile, runpy
 from pathlib import Path
 
+DATASET_DIR = Path("/kaggle/input")
 ZIP_NAME = "AIMO3_SUBMISSION.zip"
 
 def find_zip():
-roots = [Path("/kaggle/input"), Path.cwd()]
-for root in roots:
-if root.exists():
-try:
-for p in root.rglob(ZIP_NAME):
-return p
-except Exception:
-pass
-return None
+    # Preferred expected path
+    p = DATASET_DIR / "aimo3-submission" / ZIP_NAME
+    if p.exists():
+        return p
+    # Fallback: search all mounted datasets (case-insensitive filename)
+    if DATASET_DIR.exists():
+        for d in DATASET_DIR.iterdir():
+            if d.is_dir():
+                cand = d / ZIP_NAME
+                if cand.exists():
+                    return cand
+                # case-insensitive scan
+                for f in d.iterdir():
+                    if f.is_file() and f.name.lower() == ZIP_NAME.lower():
+                        return f
+    return None
 
-zip_path = find_zip()
-if not zip_path:
-try:
-inp = Path("/kaggle/input")
-if inp.exists():
-print("INPUT_DIRS=", [p.name for p in inp.iterdir()])
-except Exception:
-pass
-raise FileNotFoundError(f"Missing {ZIP_NAME}; searched under /kaggle/input and CWD")
+def main():
+    z = find_zip()
+    if z is None:
+        listing = []
+        if DATASET_DIR.exists():
+            for d in sorted(DATASET_DIR.glob("*")):
+                if d.is_dir():
+                    listing.append(str(d))
+                    for f in sorted(d.glob("*")):
+                        listing.append("  - " + str(f))
+        raise FileNotFoundError(f"Missing {ZIP_NAME} under /kaggle/input (looked for /kaggle/input/*/{ZIP_NAME}). Listing:\\n" + "\\n".join(listing))
 
-work = Path("/kaggle/working/submission")
-work.mkdir(parents=True, exist_ok=True)
+    work = Path("/kaggle/working/submission")
+    work.mkdir(parents=True, exist_ok=True)
 
-with zipfile.ZipFile(zip_path, "r") as z:
-z.extractall(work)
+    with zipfile.ZipFile(str(z), "r") as zf:
+        zf.extractall(str(work))
 
-gw = work / "kaggle_evaluation" / "aimo_3_gateway.py"
-if not gw.exists():
-raise FileNotFoundError(f"Missing gateway after extract: {gw}")
+    gw = work / "kaggle_evaluation" / "aimo_3_gateway.py"
+    if not gw.exists():
+        raise FileNotFoundError(f"Extracted zip but missing gateway at {gw}")
 
-sys.path.insert(0, str(work))
-os.chdir(str(work))
-runpy.run_path(str(gw), run_name="**main**")
+    sys.path.insert(0, str(work))
+    runpy.run_path(str(gw), run_name="__main__")
+
+if __name__ == "__main__":
+    main()
