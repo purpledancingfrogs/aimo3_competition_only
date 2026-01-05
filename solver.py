@@ -464,7 +464,7 @@ def _try_linear_equation(s: str) -> int | None:
     except Exception:
         return None
 
-def solve(text: str) -> str:
+def _solve_inner(text: str) -> str:
     s = _clean_text(text or "")
     # BASECASE_ARITH: deterministic safe arithmetic (digits/operators only)
     if re.fullmatch(r"[0-9\+\-\*\/\(\)\.\s]+", s):
@@ -501,4 +501,120 @@ if __name__ == "__main__":
         ans = "0"
     sys.stdout.write(str(ans).strip() + "\n")
 
+# === AUREON_FRONT_DOOR_ROUTER_BEGIN ===
+import re as _re
+import ast as _ast
 
+_I64_MIN = -(2**63)
+_I64_MAX =  (2**63 - 1)
+
+_exp_re = _re.compile(r"(-?\d+)\s*(?:\^|\*\*)\s*(-?\d+)")
+_mod_re = _re.compile(r"(?i)(?:divided\s+by|mod(?:ulo)?|modulus)\s+(-?\d+)")
+
+def _safe_int_str(v: int) -> str:
+    if v < _I64_MIN or v > _I64_MAX:
+        return "0"
+    return str(int(v))
+
+def _try_last_digit(s: str):
+    if "last digit" not in s.lower():
+        return None
+    m = _exp_re.search(s)
+    if not m:
+        return None
+    a = int(m.group(1)); b = int(m.group(2))
+    if b < 0:
+        return "0"
+    return _safe_int_str(pow(a, b, 10))
+
+def _try_remainder_mod(s: str):
+    lo = s.lower()
+    if ("remainder" not in lo) and ("mod" not in lo) and ("modulo" not in lo) and ("modulus" not in lo):
+        return None
+    mexp = _exp_re.search(s)
+    if not mexp:
+        return None
+    a = int(mexp.group(1)); b = int(mexp.group(2))
+    if b < 0:
+        return "0"
+    mods = list(_mod_re.finditer(s))
+    if not mods:
+        # common phrasing: "remainder when ... is divided by 1000"
+        mm = _re.search(r"(?i)divided\s+by\s+(-?\d+)", s)
+        if not mm:
+            return None
+        mval = int(mm.group(1))
+    else:
+        mval = int(mods[-1].group(1))
+    if mval == 0:
+        return "0"
+    mabs = abs(mval)
+    return _safe_int_str(pow(a, b, mabs))
+
+def _try_tiny_arithmetic(s: str):
+    # ultra-bounded arithmetic only; reject exponentiation
+    if "^" in s or "**" in s:
+        return None
+    ss = s.strip()
+    if len(ss) > 200:
+        return None
+    if not _re.fullmatch(r"[0-9\.\s\+\-\*\/\(\)]+", ss):
+        return None
+    try:
+        node = _ast.parse(ss, mode="eval")
+    except Exception:
+        return None
+    def _eval(n):
+        if isinstance(n, _ast.Expression):
+            return _eval(n.body)
+        if isinstance(n, _ast.BinOp):
+            l = _eval(n.left); r = _eval(n.right)
+            if isinstance(n.op, _ast.Add): return l + r
+            if isinstance(n.op, _ast.Sub): return l - r
+            if isinstance(n.op, _ast.Mult): return l * r
+            if isinstance(n.op, _ast.Div):
+                if r == 0: return 0
+                return l / r
+            return 0
+        if isinstance(n, _ast.UnaryOp):
+            v = _eval(n.operand)
+            if isinstance(n.op, _ast.USub): return -v
+            if isinstance(n.op, _ast.UAdd): return v
+            return 0
+        if isinstance(n, _ast.Constant) and isinstance(n.value, (int, float)):
+            return n.value
+        return 0
+    v = _eval(node)
+    if isinstance(v, float):
+        if not v.is_integer():
+            return None
+        v = int(v)
+    if not isinstance(v, int):
+        return None
+    if abs(v) > 10**12:
+        return None
+    return _safe_int_str(v)
+
+def solve(problem: str) -> str:
+    s = "" if problem is None else str(problem)
+    r = _try_last_digit(s)
+    if r is not None:
+        return r
+    r = _try_remainder_mod(s)
+    if r is not None:
+        return r
+    r = _try_tiny_arithmetic(s)
+    if r is not None:
+        return r
+    # fallback to original solver
+    try:
+        return str(_solve_inner(problem)).strip()
+    except Exception:
+        try:
+            SolverCls = globals().get("Solver", None)
+            if SolverCls is not None:
+                return str(SolverCls().solve(s)).strip()
+        except Exception:
+            pass
+        return "0"
+# === AUREON_FRONT_DOOR_ROUTER_END ===
