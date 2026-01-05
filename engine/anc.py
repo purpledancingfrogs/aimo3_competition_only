@@ -1,0 +1,1 @@
+# ANC: Algebraic Normalization Canon

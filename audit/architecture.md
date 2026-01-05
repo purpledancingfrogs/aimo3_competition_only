@@ -1,9 +1,2 @@
-﻿Architecture Summary
-
-- LLMs act as translators only
-- Formal solvers produce all answers
-- Z3 for integers, logic, optimization
-- SymPy for algebra and geometry
-- Brute force only when bounded
-- Router is regex/keyword-based
-- No manual intervention
+# Apex v3 Architecture
+ABJ,CSE,PCA,DSC,ILP,GK2,ANC,MSE,CGR,FTC,VDC,MOC enforced.

@@ -311,3 +311,8 @@ def final_accept(expr, ans):
         reject()
     print(canonical_answer(a))
     sys.exit(0)
+
+# APEX v3 hooks (ABJ,CSE,PCA,DSC,ILP,GK2,ANC,MSE,CGR,FTC,VDC,MOC)
+from engine.abj import *; from engine.cse import *; from engine.pca import *; from engine.dsc import *
+from engine.ilp import *; from engine.gk2 import *; from engine.anc import *; from engine.mse import *
+from engine.cgr import *; from engine.ftc import *; from engine.vdc import *; from engine.moc import *
