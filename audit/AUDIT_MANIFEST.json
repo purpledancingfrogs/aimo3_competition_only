@@ -1,6 +1,6 @@
 {
-  "git_head": "5ecb2cfe73cabd1f5b14a59b990351814aa3ef84",
-  "tag_audit_pass_v1": "5ecb2cfe73cabd1f5b14a59b990351814aa3ef84",
+  "git_head": "a990a56b964cd2d9a2b12b5948ddee32ff53454b",
+  "tag_audit_pass_v1": "7e23cd4a205258ad3b423979e9e0b157289ee25f",
   "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
   "files": {
     "solver.py": {
