@@ -207,11 +207,12 @@ def _try_simple_arithmetic(s: str) -> int | None:
     if not expr:
         return None
     expr = _clean_text(expr)
+    if not re.fullmatch(r"[0-9\+\-\*\/\(\)\.\s]+", expr):
+        return None
     try:
         v = _safe_eval_expr(expr)
         return _safe_int(v)
     except Exception:
-        # if sympy is available, try as last resort for arithmetic only
         if sp is not None:
             try:
                 vv = sp.sympify(expr, locals={"C": sp.binomial, "floor": sp.floor, "ceil": sp.ceiling})
@@ -220,68 +221,6 @@ def _try_simple_arithmetic(s: str) -> int | None:
             except Exception:
                 pass
         return None
-
-def _try_linear_equation(s: str) -> int | None:
-    m = re.search(r'(?:solve|find|determine)\s*[:\-]?\s*([^\n]+?)\s*=\s*([^\n\.;]+)', s, re.IGNORECASE)
-    if not m:
-        return None
-    left = _clean_text(m.group(1))
-    right = _clean_text(m.group(2))
-    if 'x' not in left and 'x' not in right:
-        return None
-
-    if sp is not None:
-        x = sp.Symbol('x')
-        try:
-            eq = sp.Eq(sp.sympify(left, locals={"x": x}), sp.sympify(right, locals={"x": x}))
-            sol = sp.solve(eq, x)
-            if sol:
-                return _safe_int(sol[0])
-        except Exception:
-            pass
-
-    # very small fallback: ax+b=c
-    expr = (left + " = " + right).replace(' ', '').replace('*', '')
-    parts = expr.split('=')
-    if len(parts) != 2:
-        return None
-
-    def parse_side(side: str):
-        a = 0
-        b = 0
-        if side and side[0] not in '+-':
-            side = '+' + side
-        for term in re.finditer(r'([+-])([^+-]+)', side):
-            sign = -1 if term.group(1) == '-' else 1
-            t = term.group(2)
-            if 'x' in t:
-                coef = t.replace('x', '')
-                coef = '1' if coef in ('', '+') else coef
-                coef = '-1' if coef == '-' else coef
-                try:
-                    a += sign * int(coef)
-                except Exception:
-                    return None
-            else:
-                try:
-                    b += sign * int(t)
-                except Exception:
-                    return None
-        return a, b
-
-    L = parse_side(parts[0])
-    R = parse_side(parts[1])
-    if L is None or R is None:
-        return None
-    aL, bL = L
-    aR, bR = R
-    a = aL - aR
-    b = bR - bL
-    if a == 0:
-        return None
-    if b % a == 0:
-        return b // a
-    return int(math.floor(b / a))
 
 def _try_remainder(s: str) -> int | None:
     m = re.search(r'remainder\s+when\s+(.+?)\s+is\s+divided\s+by\s+(.+?)(?:[\.?\n]|$)',
@@ -439,7 +378,8 @@ def _try_fe_additive_bounded(s: str):
                 vals.add(e1 * A1 + e2 * A2)
 
     return str(len(vals))
-
+
+
 def _try_trivial_eval(s: str):
     ss = (s or "").strip()
     # arithmetic "What is $...$?" (toy smoke tests)
