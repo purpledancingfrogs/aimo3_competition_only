@@ -2,6 +2,7 @@
 # Exposes solve(text) and CLI: python solver.py <stdin>
 from __future__ import annotations
 
+from modules.fractal_geometry import try_fractal_dimension, dimension_value
 import re
 import sys
 import math
@@ -464,6 +465,39 @@ def _try_linear_equation(s: str) -> int | None:
     except Exception:
         return None
 
+
+def _try_fractal_dimension(s: str):
+    # Deterministic fractal-dimension recognition; returns an int only when the prompt demands integer extraction.
+    try:
+        out = try_fractal_dimension(s)
+        if out is None:
+            return None
+        kind, a, b = out
+        dim = dimension_value(a, b)
+
+        sl = s.lower()
+
+        # Common olympiad asks: floor/ceil/nearest integer of dimension, or integer part
+        if "floor" in sl or "\\lfloor" in sl:
+            import math
+            return int(math.floor(dim))
+        if "ceiling" in sl or "ceil" in sl or "\\lceil" in sl:
+            import math
+            return int(math.ceil(dim))
+        if "nearest integer" in sl or "rounded" in sl or "round" in sl:
+            return int(round(dim))
+
+        # If it explicitly asks "integer part" treat as floor
+        if "integer part" in sl:
+            import math
+            return int(math.floor(dim))
+
+        # Otherwise, do not answer (dimension is typically non-integer); leave to other solvers.
+        return None
+    except Exception:
+        return None
+
+
 def solve(text: str) -> str:
     s = _clean_text(text or "")
     # BASECASE_ARITH: deterministic safe arithmetic (digits/operators only)
@@ -474,7 +508,7 @@ def solve(text: str) -> str:
         except Exception:
             pass
 
-    for fn in (_try_trivial_eval, _try_fe_additive_bounded, _try_sweets_ages, _try_linear_equation, _try_simple_arithmetic, _try_remainder):
+    for fn in (_try_trivial_eval, _try_fractal_dimension, _try_fe_additive_bounded, _try_sweets_ages, _try_linear_equation, _try_simple_arithmetic, _try_remainder):
         try:
             ans = fn(s)
             if ans is not None:
