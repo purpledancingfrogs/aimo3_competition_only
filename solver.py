@@ -466,6 +466,13 @@ def _try_linear_equation(s: str) -> int | None:
 
 def solve(text: str) -> str:
     s = _clean_text(text or "")
+    # BASECASE_ARITH: deterministic safe arithmetic (digits/operators only)
+    if re.fullmatch(r"[0-9\+\-\*\/\(\)\.\s]+", s):
+        try:
+            v = _safe_eval_expr(s)
+            return str(_safe_int(v))
+        except Exception:
+            pass
 
     for fn in (_try_trivial_eval, _try_fe_additive_bounded, _try_sweets_ages, _try_linear_equation, _try_simple_arithmetic, _try_remainder):
         try:
