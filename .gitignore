@@ -33,3 +33,8 @@ kaggle_submit_export.zip
 submission.csv
 
 audit/self_audit/
+# local-only artifacts
+kaggle_dataset/
+kaggle_kernel_output/
+AIMO3_SUBMISSION.zip
+audit/*.zip
