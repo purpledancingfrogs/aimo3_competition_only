@@ -22,3 +22,5 @@ audit/reports/misses_summary.md
 # generated debug artifacts
 audit/report/
 
+*.bak
+audit/**/*.zip
