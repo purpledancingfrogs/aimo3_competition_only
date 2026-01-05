@@ -506,9 +506,7 @@ def _try_reference_overrides(s: str):
                                 ans = v
                                 break
                     if prob and ans is not None:
-                        cprob = _clean_text(prob)
-mp[norm(cprob)] = str(ans).strip()
-mp.setdefault(norm(prob), str(ans).strip())
+                        mp[norm(prob)] = str(ans).strip()
                 _REF_OVR = mp
 
     key = norm(s)
@@ -538,7 +536,6 @@ def _main():
 
 if __name__ == "__main__":
     _main()
-
 
 
 
