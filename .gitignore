@@ -14,3 +14,5 @@ kaggle_data/
 *.pkl
 *.pt
 *.bin
+
+!audit/*.zip
