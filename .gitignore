@@ -7,3 +7,10 @@ solver_stdout.txt
 __pycache__/
 *.log
 *.tmp
+kaggle_data/
+.ipynb_checkpoints/
+.venv/
+*.zip
+*.pkl
+*.pt
+*.bin
