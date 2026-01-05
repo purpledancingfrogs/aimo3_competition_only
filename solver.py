@@ -274,8 +274,7 @@ def _main():
         ans = solve(txt)
     except Exception:
         ans = "0"
-    sys.stdout.write(str(ans).strip() + "
-")
+    sys.stdout.write(str(ans).strip() + "\n")
 
 if __name__ == "__main__":
     _main()
