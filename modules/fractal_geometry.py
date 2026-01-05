@@ -56,3 +56,73 @@ def try_fractal_dimension(text: str):
 
 def dimension_value(a: int, b: int) -> float:
     return _log_ratio(a, b)
+
+import math
+import re
+
+def _pow_int(a: int, n: int) -> int:
+    if n < 0: return 0
+    out = 1
+    for _ in range(n):
+        out *= a
+    return out
+
+def try_fractal_counts(text: str):
+    s = (text or "").strip().lower()
+    # normalize unicode
+    s = s.replace("–","-").replace("—","-")
+
+    # Find iteration count
+    it = None
+    m = re.search(r"\bafter\s+(\d+)\s+(?:iterations|steps|stages)\b", s)
+    if m: it = int(m.group(1))
+    m = re.search(r"\bin\s+the\s+(\d+)(?:st|nd|rd|th)\s+(?:iteration|step|stage)\b", s)
+    if m: it = int(m.group(1))
+    if it is None:
+        m = re.search(r"\b(\d+)\s+(?:iterations|steps|stages)\b", s)
+        if m: it = int(m.group(1))
+
+    # Replacement factor: each segment -> k segments
+    k = None
+    m = re.search(r"\beach\s+(?:step|iteration|stage)\s+(?:replaces|replace)\s+each\s+(?:segment|side|edge|line)\s+with\s+(\d+)\s+(?:segments|sides|edges|parts)\b", s)
+    if m: k = int(m.group(1))
+    m = re.search(r"\breplace\s+each\s+(?:segment|side|edge|line)\s+by\s+(\d+)\s+(?:segments|sides|edges|parts)\b", s)
+    if m: k = int(m.group(1))
+
+    # Initial count
+    init = None
+    if "triangle" in s: init = 3
+    if "square" in s: init = 4
+    if "cube" in s: init = 12  # edges
+    if "segment" in s and init is None: init = 1
+
+    # Known fractals (count of pieces each iteration)
+    # Return integers only when question is explicitly counting objects.
+    wants_count = any(w in s for w in ["how many", "number of", "count", "total", "segments", "sides", "edges", "pieces", "small squares", "small cubes", "triangles"])
+
+    if not wants_count:
+        return None
+
+    # Koch snowflake (triangle start, each side -> 4 segments)
+    if "koch" in s and it is not None:
+        kk = 4 if k is None else k
+        init2 = 3 if init is None else init
+        return init2 * _pow_int(kk, it)
+
+    # Sierpinski triangle: number of small triangles = 3^n (if counting triangles)
+    if ("sierpinski" in s or "sierpiński" in s) and "triangle" in s and it is not None:
+        return _pow_int(3, it)
+
+    # Sierpinski carpet: number of remaining small squares = 8^n
+    if ("sierpinski" in s or "sierpiński" in s) and "carpet" in s and it is not None:
+        return _pow_int(8, it)
+
+    # Menger sponge: number of remaining cubes = 20^n
+    if "menger" in s and "sponge" in s and it is not None:
+        return _pow_int(20, it)
+
+    # Generic replacement count
+    if it is not None and k is not None and init is not None:
+        return init * _pow_int(k, it)
+
+    return None
