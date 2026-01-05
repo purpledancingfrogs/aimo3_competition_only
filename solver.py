@@ -2,6 +2,7 @@
 # Exposes solve(text) and CLI: python solver.py <stdin>
 from __future__ import annotations
 
+from modules.number_theory import try_modular
 from modules.fractal_geometry import try_fractal_dimension, dimension_value
 from modules.fractal_geometry import try_fractal_counts
 import re
@@ -468,6 +469,17 @@ def _try_linear_equation(s: str) -> int | None:
 
 
 
+
+def _try_modular(s: str):
+    try:
+        v = try_modular(s)
+        if v is None:
+            return None
+        return int(v)
+    except Exception:
+        return None
+
+
 def _try_fractal_counts(s: str):
     try:
         v = try_fractal_counts(s)
@@ -520,7 +532,7 @@ def solve(text: str) -> str:
         except Exception:
             pass
 
-    for fn in (_try_trivial_eval, _try_fractal_dimension, _try_fractal_counts, _try_fe_additive_bounded, _try_sweets_ages, _try_linear_equation, _try_simple_arithmetic, _try_remainder):
+    for fn in (_try_trivial_eval, _try_fractal_dimension, _try_fractal_counts, _try_modular, _try_fe_additive_bounded, _try_sweets_ages, _try_linear_equation, _try_simple_arithmetic, _try_remainder):
         try:
             ans = fn(s)
             if ans is not None:
