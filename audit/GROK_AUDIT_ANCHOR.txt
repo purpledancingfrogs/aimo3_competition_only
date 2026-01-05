@@ -1,0 +1,10 @@
+REPO=purpledancingfrogs/aimo3_competition_only
+HEAD=1eb306ecf5f000e6b78dba49388673a73cfbb720
+TAG=aimo3-submission-ready
+TAG_OBJ=1eb306ecf5f000e6b78dba49388673a73cfbb720
+SUBMIT_BRANCH=aimo3-kaggle-submit
+SUBMIT_BRANCH_HEAD=1eb306ecf5f000e6b78dba49388673a73cfbb720
+KAGGLE_DATASET=nadinesquires/aimo3-submission
+KAGGLE_KERNEL=nadinesquires/aimo3-dss-submission
+KAGGLE_KERNEL_URL=https://www.kaggle.com/code/nadinesquires/aimo3-dss-submission
+UTC=2026-01-05T20:45:06Z
