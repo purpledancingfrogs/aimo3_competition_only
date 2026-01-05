@@ -1,48 +1,69 @@
-﻿import sys
+import sys
 import re
-import math
-from fractions import Fraction
+from z3 import Int, Solver, Optimize, sat
 
-def nCr(n, r):
-    if r < 0 or r > n: return 0
-    return math.factorial(n) // (math.factorial(r) * math.factorial(n - r))
+# ---------- ROUTER ----------
+def route(expr: str) -> str:
+    e = expr.lower()
+    if re.search(r'(mod|remainder|divisible|integer|distinct|min|max|least|greatest)', e):
+        return "Z3"
+    if re.search(r'(polynomial|roots|derivative|integral|circle|triangle|area|volume|intersection)', e):
+        return "SYMPY"
+    if re.search(r'(process|iteration|nth step|repeat)', e):
+        return "BRUTE"
+    return "Z3"
 
-def clean_problem(p):
-    p = p.replace('$','').replace('\\times','*').replace('×','*').replace('\\cdot','*')
-    p = p.replace('=', '==')
-    p = re.sub(r'(?i)what is|solve|for x|for \$x\$|\.', '', p).strip()
-    return p
+# ---------- Z3 SAFE TEMPLATE ----------
+def solve_z3(expr: str):
+    # VERY FIRST CANONICAL FORM: single-variable linear / affine integer equations
+    # This will be extended, not replaced.
+    expr = expr.replace(" ", "")
 
-def solve(problem):
-    p = clean_problem(problem)
-    try:
-        if 'choose' in p.lower():
-            nums = list(map(int, re.findall(r'\d+', p)))
-            if len(nums) >= 2:
-                return str(nCr(max(nums), min(nums)))
+    m = re.fullmatch(r'([+-]?\d*)\*?x([+-]\d+)?=([+-]?\d+)', expr)
+    if not m:
+        return None
 
-        if 'distance' in p.lower():
-            nums = list(map(int, re.findall(r'-?\d+', p)))
-            if len(nums) >= 4:
-                x1,y1,x2,y2 = nums[:4]
-                return str((x1-x2)**2 + (y1-y2)**2)
+    a, b, c = m.groups()
 
-        if 'x' in p and '==' in p:
-            lhs, rhs = p.split('==')
-            res = eval(f"({lhs})-({rhs})", {"__builtins__":None}, {"x":1j})
-            if res.imag != 0:
-                ans = Fraction(-res.real/res.imag).limit_denominator()
-                return str(int(ans) if ans.denominator==1 else ans)
+    if a in ("", "+"):
+        a = 1
+    elif a == "-":
+        a = -1
+    else:
+        a = int(a)
 
-        arith = re.sub(r'[a-zA-Z]', '', p)
-        if re.search(r'\d', arith):
-            r = eval(arith, {"__builtins__":None}, {})
-            return str(int(r) if r==int(r) else r)
-    except:
-        pass
-    return "0"
+    b = int(b) if b else 0
+    c = int(c)
+
+    x = Int("x")
+    s = Solver()
+
+    # Hard bounds (audit-safe)
+    s.add(x >= -10000, x <= 10000)
+    s.add(a * x + b == c)
+
+    if s.check() != sat:
+        return None
+
+    return s.model()[x].as_long()
+
+# ---------- MAIN ----------
+def main():
+    if len(sys.argv) > 1:
+        expr = " ".join(sys.argv[1:])
+    else:
+        return
+
+    branch = route(expr)
+
+    if branch == "Z3":
+        ans = solve_z3(expr)
+        if ans is None:
+            print(0)
+        else:
+            print(ans)
+    else:
+        print(0)
 
 if __name__ == "__main__":
-    for line in sys.stdin:
-        if line.strip():
-            print(solve(line.strip()))
+    main()
