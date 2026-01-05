@@ -40,8 +40,8 @@ class AIMO3Gateway(kaggle_evaluation.core.templates.Gateway):
         try:
             from solver import solve as solve_one
         except Exception as e:
-            raise GatewayRuntimeError(GatewayRuntimeErrorType.RUNTIME_ERROR, f"Failed to import solver: {e}")
-
+            et = getattr(GatewayRuntimeErrorType, "RUNTIME_ERROR", None) or next(iter(GatewayRuntimeErrorType))
+            raise GatewayRuntimeError(et, f"Failed to import solver: {e}")
         probs = data_batch.select("problem").to_series().to_list()
         outs = []
         for p in probs:

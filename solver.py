@@ -211,11 +211,11 @@ def _try_simple_arithmetic(s: str) -> int | None:
         return None
     expr = _clean_text(expr)
 
-    # Never evaluate exponent syntax here (can explode / overflow); modular engine handles '^' cases safely.
+    # Never evaluate exponent syntax here (overflow risk); modular engine handles '^' deterministically.
     if '^' in expr:
         return None
 
-    # allow only safe arithmetic tokens (digits, operators, parentheses, dot, whitespace)
+    # allow only safe arithmetic tokens
     if not re.fullmatch(r"[0-9\+\-\*\/\(\)\.\s]+", expr):
         return None
 
@@ -223,7 +223,6 @@ def _try_simple_arithmetic(s: str) -> int | None:
         v = _safe_eval_expr(expr)
         return _safe_int(v)
     except Exception:
-        # if sympy is available, try as last resort for arithmetic only (still without '^')
         if sp is not None:
             try:
                 vv = sp.sympify(expr, locals={"C": sp.binomial, "floor": sp.floor, "ceil": sp.ceiling})
@@ -232,3 +231,49 @@ def _try_simple_arithmetic(s: str) -> int | None:
             except Exception:
                 pass
         return None
+
+def solve(text: str) -> str:
+    s = _clean_text(text or "")
+
+    ordered_names = [
+        "_try_modular",                # if present
+        "_try_trivial_eval",
+        "_try_fe_additive_bounded",
+        "_try_sweets_ages",
+        "_try_linear_equation",        # if present
+        "_try_simple_arithmetic",
+        "_try_remainder",
+    ]
+
+    fns = []
+    g = globals()
+    for name in ordered_names:
+        fn = g.get(name)
+        if callable(fn):
+            fns.append(fn)
+
+    for fn in fns:
+        try:
+            ans = fn(s)
+            if ans is not None:
+                return str(int(ans))
+        except Exception:
+            continue
+
+    return "0"
+
+class Solver:
+    def solve(self, text: str) -> str:
+        return solve(text)
+
+def _main():
+    import sys
+    txt = sys.stdin.read()
+    try:
+        ans = solve(txt)
+    except Exception:
+        ans = "0"
+    sys.stdout.write(str(ans).strip() + "\n")
+
+if __name__ == "__main__":
+    _main()
