@@ -135,90 +135,53 @@ def crt2(a1: int, m1: int, a2: int, m2: int) -> Optional[int]:
     k = (t * inv) % m2p
     return (a1 + m1 * k) % l
 
-def try_modular(text: str) -> Optional[int]:
-    s = (text or "").strip()
+def try_modular(s: str):
+    """
+    Deterministic modular handler.
+    Targets:
+      - "last digit of a^b"  -> a^b mod 10
+      - "last two digits of a^b" -> mod 100
+      - "remainder when a^b is divided by m" -> a^b mod m
+      - "a mod m" / "a modulo m" -> a % m
+    Returns int or None.
+    """
+    if not s:
+        return None
     sl = s.lower()
 
-    # robust fallbacks (handles punctuation/cleaning variance)
+    def _powmod(a: int, e: int, mod: int) -> int:
+        a %= mod
+        if mod <= 0:
+            return None
+        return pow(a, e, mod)
+
+    # last digit / last two digits
     if "last digit" in sl:
         mm = re.search(r"(-?\d+)\s*\^\s*(\d+)", sl)
         if mm:
             a = int(mm.group(1)); e = int(mm.group(2))
-            return pow_mod(a, e, 10)
+            return int(_powmod(a, e, 10))
 
     if "last two digits" in sl:
         mm = re.search(r"(-?\d+)\s*\^\s*(\d+)", sl)
         if mm:
             a = int(mm.group(1)); e = int(mm.group(2))
-            return pow_mod(a, e, 100)
+            return int(_powmod(a, e, 100))
 
-    if "remainder when" in sl and "divided by" in sl:
+    # remainder when ... divided by ...
+    if "remainder" in sl and "divided by" in sl:
         mmM = re.search(r"divided\s+by\s+(\d+)", sl)
         mmP = re.search(r"(-?\d+)\s*\^\s*(\d+)", sl)
         if mmM and mmP:
             mod = int(mmM.group(1))
             a = int(mmP.group(1)); e = int(mmP.group(2))
-            return pow_mod(a, e, mod)
+            return int(_powmod(a, e, mod))
 
-    # last digit / last two digits
-    m = re.search(r"last\s+digit\s+of\s+(-?\d+)\s*\^\s*(\d+)", sl)
-    if m:
-        a = int(m.group(1)); e = int(m.group(2))
-        return pow_mod(a, e, 10)
-
-    m = re.search(r"last\s+two\s+digits\s+of\s+(-?\d+)\s*\^\s*(\d+)", sl)
-    if m:
-        a = int(m.group(1)); e = int(m.group(2))
-        return pow_mod(a, e, 100)
-
-    # remainder when (expression) is divided by m
-    m = re.search(r"remainder\s+when\s+(.+?)\s+is\s+divided\s+by\s+(\d+)", sl)
-    if m:
-        expr = m.group(1)
-        mod = int(m.group(2))
-        # fast path: single power a^e
-        mm = re.fullmatch(r"\s*(-?\d+)\s*\^\s*(\d+)\s*", expr)
-        if mm:
-            a = int(mm.group(1)); e = int(mm.group(2))
-            return pow_mod(a, e, mod)
-        # allow a*b + c*d with powers
-        # fallback: if expression contains only digits/operators/parens/spaces, try direct modular eval without ^
-        if "^" not in expr:
-            v = eval_mod(expr, mod)
-            return v
-        # limited: split on + and - at top-level for sums of powers like a^e + b^f
-        parts = re.split(r"(?<!\^)\+", expr)
-        if len(parts) <= 6:
-            total = 0
-            for part in parts:
-                part = part.strip()
-                mm2 = re.fullmatch(r"\s*(-?\d+)\s*\^\s*(\d+)\s*", part)
-                if mm2:
-                    total = (total + pow_mod(int(mm2.group(1)), int(mm2.group(2)), mod)) % mod
-                else:
-                    # try simple eval with no caret
-                    if "^" in part:
-                        return None
-                    vv = eval_mod(part, mod)
-                    if vv is None:
-                        return None
-                    total = (total + vv) % mod
-            return total
-        return None
-
-    # congruence: x ≡ a (mod m) and maybe second congruence, ask for least positive x
-    if ("mod" in sl or "modulo" in sl or "congruent" in sl) and ("least" in sl or "smallest" in sl):
-        # extract up to two congruences of form x ≡ a (mod m)
-        cons = re.findall(r"x\s*≡\s*(-?\d+)\s*\(mod\s*(\d+)\)", s)
-        if len(cons) >= 1:
-            a1, m1 = int(cons[0][0]), int(cons[0][1])
-            if len(cons) >= 2:
-                a2, m2 = int(cons[1][0]), int(cons[1][1])
-                x = crt2(a1 % m1, m1, a2 % m2, m2)
-                if x is None:
-                    return None
-                return x if x != 0 else (m1 * m2)  # least positive
-            x = a1 % m1
-            return x if x != 0 else m1
+    # explicit mod / modulo / modulus
+    mm = re.search(r"(-?\d+)\s*(?:mod|modulo)\s*(\d+)", sl)
+    if mm:
+        a = int(mm.group(1)); mod = int(mm.group(2))
+        if mod != 0:
+            return int(a % mod)
 
     return None
