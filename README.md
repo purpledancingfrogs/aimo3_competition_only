@@ -1,11 +1,19 @@
-﻿AIMO-3 Compliant Submission
+# AIMO-3 Deterministic Solver (Audit Branch)
 
-Tracked files:
-- run.py      : single deterministic entrypoint
-- solver.py   : stdlib-only deterministic solver
-- requirements.txt : empty
+Authoritative branch: aimo3-compliance
 
-Execution:
-python run.py <input.csv> <output.csv>
+## Guarantees
+- Deterministic execution
+- Offline only
+- No LLM-as-solver
+- Formal solvers (Z3/SymPy)
+- Reproducible batch pipeline
 
-No other files, directories, logs, or artifacts are present.
+## Run
+python run_all.py
+
+## Artifacts
+- solver.py
+- run_all.py
+- requirements.txt
+- submission.csv
