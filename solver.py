@@ -7,14 +7,12 @@ import sys
 import math
 from fractions import Fraction
 
-# Optional sympy (available on many Kaggle images; safe to import if present)
 try:
     import sympy as sp  # type: ignore
 except Exception:
     sp = None
 
 _INT_RE = re.compile(r'[-+]?\d+')
-_WS = re.compile(r'\s+')
 _LATEX_FRAC = re.compile(r'\\frac\{([^{}]+)\}\{([^{}]+)\}')
 _LATEX_BINOM = re.compile(r'\\binom\{([^{}]+)\}\{([^{}]+)\}')
 _LATEX_TIMES = re.compile(r'\\cdot|\\times')
@@ -36,14 +34,12 @@ def _clean_text(s: str) -> str:
     s = _LATEX_RFLOOR.sub(')', s)
     s = _LATEX_LCEIL.sub('ceil(', s)
     s = _LATEX_RCEIL.sub(')', s)
-    # \frac{a}{b} -> (a)/(b)
-    for _ in range(3):
+    for _ in range(4):
         s2 = _LATEX_FRAC.sub(r'(\1)/(\2)', s)
         if s2 == s:
             break
         s = s2
-    # \binom{n}{k} -> C(n,k)
-    for _ in range(3):
+    for _ in range(4):
         s2 = _LATEX_BINOM.sub(r'C(\1,\2)', s)
         if s2 == s:
             break
@@ -60,7 +56,6 @@ def _safe_int(x) -> int:
     if isinstance(x, Fraction):
         if x.denominator == 1:
             return int(x.numerator)
-        # For contest answers, prefer exact integer only; otherwise floor
         return int(math.floor(x))
     try:
         if sp is not None and isinstance(x, sp.Basic):
@@ -83,33 +78,20 @@ def _C(n: int, k: int) -> int:
         return 0
     return math.comb(n, k)
 
-def _gcd(a: int, b: int) -> int:
-    return math.gcd(a, b)
-
-def _lcm(a: int, b: int) -> int:
-    return abs(a // math.gcd(a, b) * b) if a and b else 0
-
 def _safe_eval_expr(expr: str) -> Fraction | int:
-    """
-    Deterministic arithmetic evaluator for expressions consisting of:
-    integers, + - * / ** parentheses, and functions: gcd, lcm, C, floor, ceil.
-    Uses Python eval with locked globals and Fraction for exact division.
-    """
     expr = expr.strip()
     if not expr:
         raise ValueError("empty expr")
 
-    # Replace integer divisions to exact Fractions by wrapping "/" operands via Fraction through eval namespace.
-    # We keep "/" as true division; Python will use int->float unless we coerce.
-    # Easiest: replace all integers with Fraction(int,1) tokens for eval.
-    def repl_int(m):
+    # Coerce all integer literals to Fraction to keep exact arithmetic under "/".
+    def repl_int(m: re.Match) -> str:
         return f"F({m.group(0)},1)"
     expr_frac = re.sub(r'(?<![A-Za-z_])[-+]?\d+(?![A-Za-z_])', repl_int, expr)
 
     allowed = {
         "F": Fraction,
-        "gcd": lambda a, b: Fraction(_gcd(int(a), int(b)), 1),
-        "lcm": lambda a, b: Fraction(_lcm(int(a), int(b)), 1),
+        "gcd": lambda a, b: Fraction(math.gcd(int(a), int(b)), 1),
+        "lcm": lambda a, b: Fraction(abs(int(a) // math.gcd(int(a), int(b)) * int(b)) if int(a) and int(b) else 0, 1),
         "C": lambda n, k: Fraction(_C(int(n), int(k)), 1),
         "floor": lambda x: Fraction(math.floor(float(x)), 1),
         "ceil": lambda x: Fraction(math.ceil(float(x)), 1),
@@ -120,18 +102,42 @@ def _safe_eval_expr(expr: str) -> Fraction | int:
         if val.denominator == 1:
             return int(val.numerator)
         return val
-    if isinstance(val, (int,)):
+    if isinstance(val, int):
         return val
-    # fall back
     return Fraction(float(val)).limit_denominator()
 
+def _extract_arith_candidate(s: str) -> str | None:
+    # Prefer expressions introduced by keywords.
+    m = re.search(r'(?:what\s+is|compute|evaluate|simplify|calculate|find)\s*[:\-]?\s*([0-9\(\)\s\+\-\*\/\^\.,]+)\??',
+                  s, re.IGNORECASE | re.DOTALL)
+    if m:
+        expr = m.group(1).replace(',', '').strip().rstrip('.').rstrip('?').rstrip('!').strip()
+        if expr:
+            return expr
+
+    # Fallback: find a maximal operator-containing numeric expression anywhere.
+    # Guardrails: no letters, short, must contain an operator and >= 2 numbers.
+    best = None
+    for mm in re.finditer(r'[-+*/^()\d\s\.,]{5,}', s):
+        cand = mm.group(0)
+        cand = cand.replace(',', '').strip().rstrip('.').rstrip('?').rstrip('!').strip()
+        if not cand or len(cand) > 220:
+            continue
+        compact = re.sub(r'\s+', '', cand)
+        if re.search(r'[A-Za-z_\\]', compact):
+            continue
+        if not re.search(r'[\+\-\*/\^]', compact):
+            continue
+        if len(re.findall(r'\d+', compact)) < 2:
+            continue
+        if best is None or len(compact) > len(best):
+            best = compact
+    return best
+
 def _try_simple_arithmetic(s: str) -> int | None:
-    # Patterns like "What is 1-1?" or "Compute 2*(3+4)."
-    m = re.search(r'(?:what is|compute|evaluate|find)\s*[:\-]?\s*([0-9\(\)\s\+\-\*\/\^\.,]+)\??', s, re.IGNORECASE)
-    if not m:
+    expr = _extract_arith_candidate(s)
+    if not expr:
         return None
-    expr = m.group(1)
-    expr = expr.replace(',', '').strip().rstrip('.')
     expr = _clean_text(expr)
     try:
         v = _safe_eval_expr(expr)
@@ -140,13 +146,11 @@ def _try_simple_arithmetic(s: str) -> int | None:
         return None
 
 def _try_linear_equation(s: str) -> int | None:
-    # Matches: solve 2*x + 3 = 11
     m = re.search(r'(?:solve|find|determine)\s*[:\-]?\s*([^\n]+?)\s*=\s*([^\n\.;]+)', s, re.IGNORECASE)
     if not m:
         return None
     left = _clean_text(m.group(1))
     right = _clean_text(m.group(2))
-    # If clearly a single-variable x equation, solve via sympy if available; else manual for ax+b=c
     if 'x' not in left and 'x' not in right:
         return None
 
@@ -160,25 +164,22 @@ def _try_linear_equation(s: str) -> int | None:
         except Exception:
             pass
 
-    # Manual fallback: ax + b = c with integers
-    # Normalize like: 2*x+3=11, 3*x-5=16, -x+7=2
-    expr = (left + " = " + right).replace(' ', '')
-    expr = expr.replace('*', '')
-    # Bring to ax+b=c where a,b,c ints
-    # Parse left as ax + b
+    expr = (left + " = " + right).replace(' ', '').replace('*', '')
+    parts = expr.split('=')
+    if len(parts) != 2:
+        return None
+
     def parse_side(side: str):
         a = 0
         b = 0
-        # Ensure leading sign
         if side and side[0] not in '+-':
             side = '+' + side
-        # Tokenize terms: ±... where term can be x, nx, or integer
         for term in re.finditer(r'([+-])([^+-]+)', side):
             sign = -1 if term.group(1) == '-' else 1
             t = term.group(2)
             if 'x' in t:
                 coef = t.replace('x', '')
-                coef = coef if coef not in ('', '+') else '1'
+                coef = '1' if coef in ('', '+') else coef
                 coef = '-1' if coef == '-' else coef
                 try:
                     a += sign * int(coef)
@@ -191,9 +192,6 @@ def _try_linear_equation(s: str) -> int | None:
                     return None
         return a, b
 
-    parts = expr.split('=')
-    if len(parts) != 2:
-        return None
     L = parse_side(parts[0])
     R = parse_side(parts[1])
     if L is None or R is None:
@@ -206,11 +204,9 @@ def _try_linear_equation(s: str) -> int | None:
         return None
     if b % a == 0:
         return b // a
-    # If non-integer, return floor
     return int(math.floor(b / a))
 
 def _try_remainder(s: str) -> int | None:
-    # "remainder when A is divided by B"
     m = re.search(r'remainder\s+when\s+(.+?)\s+is\s+divided\s+by\s+(.+?)[\.\?]', s, re.IGNORECASE | re.DOTALL)
     if not m:
         return None
@@ -225,19 +221,8 @@ def _try_remainder(s: str) -> int | None:
     except Exception:
         return None
 
-def _extract_last_int(s: str) -> int | None:
-    # If prompt includes "Return final integer only." and there is an explicit numeric result embedded
-    ints = _INT_RE.findall(s.replace(',', ''))
-    if not ints:
-        return None
-    try:
-        return int(ints[-1])
-    except Exception:
-        return None
-
 def solve(text: str) -> str:
-    s0 = text or ""
-    s = _clean_text(s0)
+    s = _clean_text(text or "")
 
     for fn in (_try_linear_equation, _try_simple_arithmetic, _try_remainder):
         try:
@@ -247,7 +232,6 @@ def solve(text: str) -> str:
         except Exception:
             continue
 
-    # No safe solve found
     return "0"
 
 class Solver:
@@ -256,8 +240,7 @@ class Solver:
 
 def _main():
     data = sys.stdin.read()
-    out = solve(data)
-    sys.stdout.write(str(out).strip())
+    sys.stdout.write(solve(data).strip())
 
 if __name__ == "__main__":
     _main()
