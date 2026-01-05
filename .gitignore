@@ -16,3 +16,5 @@ kaggle_data/
 *.bin
 
 !audit/*.zip
+audit/reports/misses.jsonl
+audit/reports/misses_summary.md
