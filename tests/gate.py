@@ -1,19 +1,29 @@
-﻿import re, sys
+﻿import re
 from pathlib import Path
 
 def file_text(p: Path) -> str:
     return p.read_text(encoding="utf-8", errors="ignore")
 
 def main():
-    # determinism scan: reject obvious randomness
     bad = []
+
+    self_path = Path("tests") / "gate.py"
+
+    # determinism scan: reject actual randomness imports/usages
     for p in Path(".").rglob("*.py"):
-        if any(x in str(p).lower() for x in [r"\.venv", r"\__pycache__", "/.venv", "/__pycache__"]):
+        ps = str(p).replace("\\", "/")
+        if ps.startswith(".venv/") or ps.startswith("venv/") or ps.startswith("__pycache__/") or ps.startswith(".git/"):
             continue
+        if p == self_path:
+            continue
+
         t = file_text(p)
+
         if re.search(r"(?m)^\s*import\s+random\b", t) or re.search(r"(?m)^\s*from\s+random\s+import\b", t):
             bad.append(f"RANDOM_IMPORT:{p}")
-        if "numpy.random" in t or "random.seed(" in t:
+
+        # avoid matching this scanner by not embedding "random.seed(" as a literal anywhere
+        if ("random" + ".seed(") in t or ("numpy" + ".random") in t:
             bad.append(f"RANDOM_USAGE:{p}")
 
     # bounds veto must be present
