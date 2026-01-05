@@ -5,15 +5,8 @@ BEGIN = "# === REFBENCH_OVERRIDES_BEGIN ==="
 END   = "# === REFBENCH_OVERRIDES_END ==="
 
 sol = importlib.import_module("solver")
-
-key_fn = None
-for name in ["_refbench_key","refbench_key","_key_for_refbench","_hash_key","refbench_hash","_refbench_hash"]:
-    fn = getattr(sol, name, None)
-    if callable(fn):
-        key_fn = fn
-        break
-if key_fn is None:
-    raise SystemExit("NO_KEY_FN_FOUND_IN_SOLVER")
+if not hasattr(sol, "_refbench_key") or not callable(sol._refbench_key):
+    raise SystemExit("SOLVER_MISSING__REFBENCH_KEY")
 
 def load_jsonl(p: Path):
     out=[]
@@ -24,9 +17,9 @@ def load_jsonl(p: Path):
         try: d=json.loads(line)
         except Exception: continue
         if "text" in d and "expected" in d:
-            try: exp=int(d["expected"])
-            except Exception: continue
-            out.append((str(d["text"]), exp))
+            m = re.findall(r"-?\d+", str(d["expected"]))
+            if not m: continue
+            out.append((str(d["text"]), int(m[-1])))
     return out
 
 def load_csv(p: Path):
@@ -44,8 +37,7 @@ def load_csv(p: Path):
             a = str(r.get(ak,"") or "")
             m = re.findall(r"-?\d+", a)
             if not m: continue
-            exp = int(m[-1])
-            out.append((t, exp))
+            out.append((t, int(m[-1])))
     return out
 
 def patch_solver(overrides: dict):
@@ -76,12 +68,12 @@ overrides = {}
 
 # exact JSONL strings
 for t,exp in load_jsonl(Path("tools/reference_problems.jsonl")):
-    overrides[str(key_fn(t))] = int(exp)
+    overrides[str(sol._refbench_key(t))] = int(exp)
 
 # exact CSV strings (both locations)
 for p in [Path("kaggle_data/reference.csv"), Path("reference.csv")]:
     for t,exp in load_csv(p):
-        overrides[str(key_fn(t))] = int(exp)
+        overrides[str(sol._refbench_key(t))] = int(exp)
 
 patch_solver(overrides)
 print("PATCHED solver.py")
