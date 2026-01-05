@@ -24,3 +24,4 @@ audit/report/
 
 *.bak
 audit/**/*.zip
+# local residue (never commit)
