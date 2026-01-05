@@ -1,0 +1,51 @@
+{
+  "git_head": "dfee727bd6389c3af427a326fcae574adc7edfea",
+  "tag_audit_pass_v1": "dfee727bd6389c3af427a326fcae574adc7edfea",
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "files": {
+    "solver.py": {
+      "sha256": "21adb9dfc2d54494f9c6d3a466c83fa7d9b3cb47cc866c6b7a6500c0050bba28",
+      "bytes": 9310
+    },
+    "run_all.py": {
+      "sha256": "92c3cdc11e8c8a3ec5ed9acea3a9f19d0c5dd4bb87a93f478331cbb9c035ad44",
+      "bytes": 648
+    },
+    "run.py": {
+      "sha256": "57f502a2c74ca9c869110a4368ba18e4e0f6eaa95bc16b281f849f20ef73bdc6",
+      "bytes": 800
+    },
+    "submission.csv": {
+      "sha256": "1a0fb7dc445e9f6377a0cb682ac8b1b8bcbb29a2f0585d8caee6e44e92db4aa1",
+      "bytes": 41
+    },
+    "audit_test.csv": {
+      "sha256": "1a0fb7dc445e9f6377a0cb682ac8b1b8bcbb29a2f0585d8caee6e44e92db4aa1",
+      "bytes": 41
+    },
+    "eval_report.csv": {
+      "sha256": "c5ef2faa6239260febf7c3bcb112ebe3fa61d86cc70ef0bfbeff12cd11a6e358",
+      "bytes": 185
+    },
+    "eval_train.py": {
+      "sha256": "b1f30d12c31cfb8cfaa292f6574c7a918572eb7a1653005df7072298780d8e7b",
+      "bytes": 3663
+    },
+    "audit/python_version.txt": {
+      "sha256": "8cea887ed5516cce573b56e44233a416dd24d859a13bbf1ad36b34dcb1bf094b",
+      "bytes": 18
+    },
+    "audit/pip_version.txt": {
+      "sha256": "ddc1f06370858b48ad4f7fdccf5d8f23d737c422ebed2f409333a05cbfd14962",
+      "bytes": 112
+    },
+    "audit/pip_freeze.txt": {
+      "sha256": "2297c2a4e71587915cf2e559c69e8299799ce4865be5be7b2c70c220a317ecc8",
+      "bytes": 3089
+    },
+    "audit/eval_summary.json": {
+      "sha256": "92a97997c8a3542148353f8167a0ac6cb104e698d99ad2e92425b2bfe866f0b1",
+      "bytes": 3345
+    }
+  }
+}
