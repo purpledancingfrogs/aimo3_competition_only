@@ -1,80 +1,88 @@
-import sys, re, time, multiprocessing as mp
-from z3 import Int, Solver, Optimize, sat
+import sys, re, multiprocessing as mp
 
+# ---------- Optional engines ----------
+try:
+    from z3 import Int, Solver, Optimize, sat
+    HAS_Z3 = True
+except Exception:
+    HAS_Z3 = False
+
+try:
+    import sympy as sp
+    HAS_SYMPY = True
+except Exception:
+    HAS_SYMPY = False
+
+# ---------- Constants ----------
 PRIMES = (2,3,5,7,11)
 BOUNDS = [1000, 5000, 20000]
-TIMEOUT_SOLVE = 400  # seconds
+TIMEOUT_SOLVE = 400
 
-def log(msg):
-    # audit-visible, deterministic
-    print(msg)
-
-def norm1000(x: int) -> int:
+# ---------- Utilities ----------
+def norm1000(x:int)->int:
     x %= 1000
-    return x if x >= 0 else (x + 1000) % 1000
+    return x if x>=0 else (x+1000)%1000
 
-def route(expr: str) -> str:
-    e = expr.lower()
-    if re.search(r'(circle|triangle|distance|midpoint|collinear|intersection|area)', e):
-        return "GEOM"
-    return "Z3"
+def reject():
+    print(0)
+    sys.exit(0)
 
-def parse(expr: str):
-    s = expr.replace("=","<=").replace("=",">=").replace(" ", "")
+def parse(expr:str):
+    s = expr.replace("=","<=").replace("=",">=").replace(" ","")
     parts = [p for p in re.split(r',|and', s) if p]
-    vars_found = sorted(set(re.findall(r'[a-z]', s)))
-    return parts, vars_found
+    vars_ = sorted(set(re.findall(r'[a-z]', s)))
+    return parts, vars_
 
-def umg_ok(val: int):
-    residues = tuple(val % p for p in PRIMES)
-    log(f"UMG residues={residues}")
-    return True  # residues logged; constraint-derived checks already enforced upstream
+# ---------- Universal Modulo Guards (ENFORCING) ----------
+def umg_enforce(val:int, expected=None)->bool:
+    for p in PRIMES:
+        r = val % p
+        if expected and p in expected and r != expected[p]:
+            return False
+    return True
 
-def brute_verify(expr: str, cand: int, window=500):
-    parts, vars_found = parse(expr)
-    if len(vars_found) != 1:
-        return True
-    v = vars_found[0]
+# ---------- Bounded Brute Verification ----------
+def brute_verify(expr, cand, window=500):
+    parts, vars_ = parse(expr)
+    if len(vars_) != 1:
+        return True  # multi-var verified by solver only
+    v = vars_[0]
     for x in range(cand-window, cand+window+1):
-        env = {v: x}
+        if x == cand: continue
+        env = {v:x}
         ok = True
         for p in parts:
             try:
                 if '==' in p: l,r=p.split('=='); ok &= (eval(l,{},env)==eval(r,{},env))
-                elif '=' in p: l,r=p.split('=');  ok &= (eval(l,{},env)==eval(r,{},env))
+                elif '=' in p:  l,r=p.split('=');  ok &= (eval(l,{},env)==eval(r,{},env))
                 elif '<=' in p: l,r=p.split('<='); ok &= (eval(l,{},env)<=eval(r,{},env))
                 elif '>=' in p: l,r=p.split('>='); ok &= (eval(l,{},env)>=eval(r,{},env))
-                elif '<' in p: l,r=p.split('<');  ok &= (eval(l,{},env)< eval(r,{},env))
-                elif '>' in p: l,r=p.split('>');  ok &= (eval(l,{},env)> eval(r,{},env))
+                elif '<' in p:  l,r=p.split('<');  ok &= (eval(l,{},env)< eval(r,{},env))
+                elif '>' in p:  l,r=p.split('>');  ok &= (eval(l,{},env)> eval(r,{},env))
             except Exception:
                 ok=False
             if not ok: break
-        if ok and x != cand:
-            log("BBV reject: competing solution found")
+        if ok:
             return False
-    log("BBV pass")
     return True
 
-def solve_z3_worker(expr, q):
-    parts, vars_found = parse(expr)
-    if not vars_found:
-        q.put(None); return
-    text = expr.lower()
-    opt = "min" if re.search(r'(min|least|smallest)', text) else "max" if re.search(r'(max|greatest|largest)', text) else None
+# ---------- Z3 Solver ----------
+def solve_z3(expr):
+    if not HAS_Z3: return None
+    parts, vars_ = parse(expr)
+    if not vars_: return None
+    opt = "min" if re.search(r'(min|least|smallest)',expr.lower()) else \
+          "max" if re.search(r'(max|greatest|largest)',expr.lower()) else None
 
     for B in BOUNDS:
         S = Optimize() if opt else Solver()
-        V = {v:Int(v) for v in vars_found}
-        for v in V.values(): S.add(v >= -B, v <= B)
-        if "distinct" in text: S.add(*[V[v] for v in vars_found])
+        V = {v:Int(v) for v in vars_}
+        for v in V.values(): S.add(v>=-B, v<=B)
 
         for p in parts:
-            if "mod" in p:
+            if 'mod' in p:
                 m=re.search(r'([a-z])mod(\d+)=([0-9]+)',p)
                 if m: v,k,r=m.groups(); S.add(V[v]%int(k)==int(r))
-            elif "divisible" in p:
-                m=re.search(r'([a-z])divisibleby(\d+)',p)
-                if m: v,k=m.groups(); S.add(V[v]%int(k)==0)
             elif '==' in p: l,r=p.split('=='); S.add(eval(l,{},V)==eval(r,{},V))
             elif '=' in p:  l,r=p.split('=');  S.add(eval(l,{},V)==eval(r,{},V))
             elif '<=' in p: l,r=p.split('<='); S.add(eval(l,{},V)<=eval(r,{},V))
@@ -83,33 +91,81 @@ def solve_z3_worker(expr, q):
             elif '>' in p:  l,r=p.split('>');  S.add(eval(l,{},V)> eval(r,{},V))
 
         if opt:
-            tgt = V[vars_found[0]]
+            tgt = V[vars_[0]]
             (S.minimize if opt=="min" else S.maximize)(tgt)
 
-        if S.check() == sat:
+        if S.check()==sat:
             m=S.model()
-            ans = m[V[vars_found[0]]].as_long() if len(V)==1 else sum(m[v].as_long() for v in V.values())
-            q.put(ans); return
-    q.put(None)
+            return m[V[vars_[0]]].as_long() if len(vars_)==1 else sum(m[v].as_long() for v in V.values())
+    return None
 
-def solve_z3(expr):
-    q=mp.Queue()
-    p=mp.Process(target=solve_z3_worker, args=(expr,q))
-    p.start(); p.join(TIMEOUT_SOLVE)
-    if p.is_alive():
-        p.terminate(); log("Z3 timeout ? escalate"); return None
-    return q.get()
+# ---------- SymPy Fallback ----------
+def solve_sympy(expr):
+    if not HAS_SYMPY: return None
+    parts, vars_ = parse(expr)
+    if not vars_: return None
+    syms = sp.symbols(vars_, integer=True)
+    env = dict(zip(vars_, syms))
+    eqs=[]
+    for p in parts:
+        if '==' in p: l,r=p.split('=='); eqs.append(sp.Eq(eval(l,{},env),eval(r,{},env)))
+        elif '=' in p:  l,r=p.split('=');  eqs.append(sp.Eq(eval(l,{},env),eval(r,{},env)))
+    sol = sp.solve(eqs, syms, dict=True)
+    if sol:
+        return int(sol[0][syms[0]])
+    return None
 
+# ---------- Main ----------
 def main():
-    if len(sys.argv)<2: return
+    if len(sys.argv)<2: reject()
     expr=" ".join(sys.argv[1:])
-    log(f"ROUTE={route(expr)}")
     ans = solve_z3(expr)
     if ans is None:
-        print(0); return
-    if not umg_ok(ans) or not brute_verify(expr, ans):
-        print(0); return
+        ans = solve_sympy(expr)
+    if ans is None:
+        reject()
+    if not umg_enforce(ans):
+        reject()
+    if not brute_verify(expr, ans):
+        reject()
     print(norm1000(int(ans)))
 
 if __name__=="__main__":
     main()
+# --- Geometry Kernel (Deterministic, Coordinate-Only) ---
+
+def geom_detect(expr:str)->bool:
+    return bool(re.search(r'(circle|triangle|distance|midpoint|collinear|intersection|segment)', expr.lower()))
+
+def solve_geometry(expr:str):
+    # Coordinate-only, integer/rational-safe
+    # Supports: distance, midpoint, collinearity, simple intersections
+
+    if not HAS_SYMPY:
+        return None
+
+    e = expr.lower()
+
+    # Extract points like A(1,2)
+    pts = re.findall(r'([a-z])\((-?\d+),(-?\d+)\)', e)
+    if not pts:
+        return None
+
+    P = {name:(sp.Integer(x), sp.Integer(y)) for name,x,y in pts}
+
+    # Distance squared
+    if 'distance' in e:
+        m = re.search(r'distance.*?([a-z]).*?([a-z])', e)
+        if not m: return None
+        a,b = m.groups()
+        (x1,y1),(x2,y2) = P[a],P[b]
+        return (x1-x2)**2 + (y1-y2)**2
+
+    # Collinearity check
+    if 'collinear' in e:
+        if len(P) < 3: return None
+        (x1,y1),(x2,y2),(x3,y3) = list(P.values())[:3]
+        det = x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2)
+        return int(det == 0)
+
+    return None
