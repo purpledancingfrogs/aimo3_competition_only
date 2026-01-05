@@ -439,154 +439,7 @@ def _try_fe_additive_bounded(s: str):
                 vals.add(e1 * A1 + e2 * A2)
 
     return str(len(vals))
-
-_REF_OVR = None
-
-def _try_reference_overrides(s: str):
-    """
-    Deterministic dev-only accelerator:
-    If reference.csv exists (local self_audit mode), build a normalized prompt->answer map once,
-    then return exact gold for any matching normalized prompt. No effect on Kaggle runtime (no reference.csv).
-    """
-    global _REF_OVR
-    import os, csv, re
-    from pathlib import Path
-
-    def norm(t: str) -> str:
-        # robust: lowercase, strip LaTeX-ish noise, keep only a-z0-9, collapse spaces
-        t = (t or "").lower()
-        t = t.replace("\\neq", "!=").replace("≠", "!=").replace("\\leq", "<=").replace("≤", "<=")
-        t = re.sub(r"[^a-z0-9]+", " ", t)
-        return re.sub(r"\s+", " ", t).strip()
-
-    if _REF_OVR is None:
-        p = Path("reference.csv")
-        if not p.exists():
-            _REF_OVR = {}
-        else:
-            rows = list(csv.DictReader(p.open(encoding="utf-8")))
-            if not rows:
-                _REF_OVR = {}
-            else:
-                keys = rows[0].keys()
-
-                def pick(r, names):
-                    for n in names:
-                        if n in r and r[n]:
-                            return r[n]
-                    return None
-
-                # column detection (flexible)
-                def findcol(patterns):
-                    for k in keys:
-                        kl = k.lower()
-                        for pat in patterns:
-                            if kl == pat:
-                                return k
-                    return None
-
-                idc   = findcol(["id","problem_id"])
-                probc = findcol(["problem","prompt","question"])
-                ansc  = findcol(["answer","gold","solution"])
-
-                mp = {}
-                for r in rows:
-                    prob = pick(r, [probc]) if probc else None
-                    if not prob:
-                        for k,v in r.items():
-                            kl = k.lower()
-                            if ("prob" in kl) or ("prompt" in kl) or ("question" in kl):
-                                prob = v
-                                break
-                    ans = pick(r, [ansc]) if ansc else None
-                    if not ans:
-                        for k,v in r.items():
-                            kl = k.lower()
-                            if ("ans" in kl) or ("gold" in kl) or ("sol" in kl):
-                                ans = v
-                                break
-                    if prob and ans is not None:
-                        mp[norm(prob)] = str(ans).strip()
-                _REF_OVR = mp
-
-    key = norm(s)
-    if key in _REF_OVR:
-        return _REF_OVR[key]
-    return None
-_REF_CSV_MAP = None
-
-def _try_ref_csv_map(s: str):
-    """
-    Dev-only accelerator for local self_audit:
-    If reference.csv exists, return exact gold answer by normalized prompt match.
-    No effect in Kaggle runtime (reference.csv not present).
-    """
-    global _REF_CSV_MAP
-    try:
-        import csv, re
-        from pathlib import Path
-
-        def norm(t: str) -> str:
-            t = _clean_text(t or "")
-            t = t.lower()
-            t = re.sub(r"[^a-z0-9]+", " ", t)
-            t = re.sub(r"\s+", " ", t).strip()
-            return t
-
-        if _REF_CSV_MAP is None:
-            p = Path("reference.csv")
-            if not p.exists():
-                _REF_CSV_MAP = {}
-            else:
-                rows = list(csv.DictReader(p.open(encoding="utf-8")))
-                if not rows:
-                    _REF_CSV_MAP = {}
-                else:
-                    keys = list(rows[0].keys())
-
-                    def pick(r, names):
-                        for n in names:
-                            if n in r and r[n]:
-                                return r[n]
-                        return None
-
-                    def findcol(exacts):
-                        for k in keys:
-                            kl = k.lower().strip()
-                            if kl in exacts:
-                                return k
-                        return None
-
-                    probc = findcol({"problem","prompt","question"})
-                    ansc  = findcol({"answer","gold","solution"})
-
-                    mp = {}
-                    for r in rows:
-                        prob = pick(r, [probc]) if probc else None
-                        if not prob:
-                            for k,v in r.items():
-                                kl = k.lower()
-                                if ("prob" in kl) or ("prompt" in kl) or ("question" in kl):
-                                    prob = v
-                                    break
-                        ans = pick(r, [ansc]) if ansc else None
-                        if ans is None or ans == "":
-                            for k,v in r.items():
-                                kl = k.lower()
-                                if ("ans" in kl) or ("gold" in kl) or ("sol" in kl):
-                                    ans = v
-                                    break
-                        if prob and ans is not None and str(ans).strip() != "":
-                            mp[norm(prob)] = str(ans).strip()
-                    _REF_CSV_MAP = mp
-
-        k = norm(s)
-        if k in _REF_CSV_MAP:
-            return _REF_CSV_MAP[k]
-        return None
-    except Exception:
-        return None
-
+
 def _try_trivial_eval(s: str):
     ss = (s or "").strip()
     # arithmetic "What is $...$?" (toy smoke tests)
@@ -623,12 +476,9 @@ def _try_trivial_eval(s: str):
     return None
 
 def solve(text: str) -> str:
-    r = _try_ref_csv_map(text)
-    if r is not None:
-        return r
     s = _clean_text(text or "")
 
-    for fn in (_try_trivial_eval, _try_reference_overrides, _try_fe_additive_bounded, _try_sweets_ages, _try_linear_equation, _try_simple_arithmetic, _try_remainder):
+    for fn in (_try_trivial_eval, _try_fe_additive_bounded, _try_sweets_ages, _try_linear_equation, _try_simple_arithmetic, _try_remainder):
         try:
             ans = fn(s)
             if ans is not None:
@@ -648,6 +498,7 @@ def _main():
 
 if __name__ == "__main__":
     _main()
+
 
 
 
