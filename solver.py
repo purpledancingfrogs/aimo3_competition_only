@@ -196,3 +196,79 @@ def solve_with_dwcl(expr:str):
         return None
 
     return int(ansA)
+# --- Layer 1: Multi-Invariant Closure (MIC) ---
+
+def invariant_closure(expr, val):
+    parts, vars_ = parse(expr)
+    if len(vars_) != 1:
+        return True
+    v = vars_[0]
+    env = {v: val}
+
+    # parity chain
+    if "even" in expr.lower() and val % 2 != 0:
+        return False
+    if "odd" in expr.lower() and val % 2 != 1:
+        return False
+
+    # monotonic bounds
+    for p in parts:
+        try:
+            if '<=' in p:
+                l,r = p.split('<=')
+                if not eval(l,{},env) <= eval(r,{},env): return False
+            if '>=' in p:
+                l,r = p.split('>=')
+                if not eval(l,{},env) >= eval(r,{},env): return False
+        except Exception:
+            pass
+
+    return True
+
+
+# --- Layer 2: Solution Uniqueness Certificate (SUC) ---
+
+def uniqueness_certificate(expr, cand):
+    if not HAS_Z3:
+        return True
+    parts, vars_ = parse(expr)
+    if len(vars_) != 1:
+        return True
+
+    v = vars_[0]
+    V = Int(v)
+    S = Solver()
+    S.add(V != cand)
+
+    for p in parts:
+        try:
+            if '==' in p: l,r=p.split('=='); S.add(eval(l,{}, {v:V})==eval(r,{}, {v:V}))
+            elif '=' in p: l,r=p.split('=');  S.add(eval(l,{}, {v:V})==eval(r,{}, {v:V}))
+            elif '<=' in p: l,r=p.split('<='); S.add(eval(l,{}, {v:V})<=eval(r,{}, {v:V}))
+            elif '>=' in p: l,r=p.split('>='); S.add(eval(l,{}, {v:V})>=eval(r,{}, {v:V}))
+        except Exception:
+            pass
+
+    return S.check() != sat
+
+
+# --- Layer 3: Canonical Answer Form (CAF) ---
+
+def canonical_answer(val):
+    if not isinstance(val, int):
+        reject()
+    return norm1000(val)
+
+
+# --- Final acceptance gate override ---
+def final_accept(expr, ans):
+    if not umg_enforce(ans):
+        reject()
+    if not invariant_closure(expr, ans):
+        reject()
+    if not brute_verify(expr, ans):
+        reject()
+    if not uniqueness_certificate(expr, ans):
+        reject()
+    print(canonical_answer(ans))
+    sys.exit(0)
