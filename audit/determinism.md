@@ -1,9 +1,8 @@
-﻿Determinism Policy
+﻿Determinism
+- No randomness (no random, numpy RNG, sampling, time-based branching)
+- Fixed escalation schedules
+- Hard timeouts on solvers (process killer)
+- Identical outputs across repeated runs on same inputs
 
-- Single authoritative branch: aimo3-compliance
-- No stochastic components
-- Fixed solver hierarchy: Z3 > SymPy > Brute
-- Bounded domains enforced
-- Exact arithmetic only
-- Reproducible outputs across runs
-- One submission artifact: submission.csv
+PowerShell note:
+- Do not use '<' redirection. Use: Get-Content file | python .\solver.py

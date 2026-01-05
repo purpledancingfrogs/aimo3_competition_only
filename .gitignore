@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+input.txt
+solver_stdout.txt
+__pycache__/
+*.log
+*.tmp
