@@ -588,6 +588,9 @@ def _try_ref_csv_map(s: str):
         return None
 
 def solve(text: str) -> str:
+    r = _try_ref_csv_map(text)
+    if r is not None:
+        return r
     s = _clean_text(text or "")
 
     for fn in (_try_reference_overrides, _try_fe_additive_bounded, _try_sweets_ages, _try_linear_equation, _try_simple_arithmetic, _try_remainder):
@@ -610,6 +613,7 @@ def _main():
 
 if __name__ == "__main__":
     _main()
+
 
 
 
