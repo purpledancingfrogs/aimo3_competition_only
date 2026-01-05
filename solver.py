@@ -169,3 +169,30 @@ def solve_geometry(expr:str):
         return int(det == 0)
 
     return None
+# --- Dual-World Consistency Lock (DWCL) ---
+
+def normalize_expr_worldA(expr:str)->str:
+    # Original expression, minimal normalization
+    return expr.replace("=","<=").replace("=",">=")
+
+def normalize_expr_worldB(expr:str)->str:
+    # Semantically equivalent but syntactically different
+    e = expr.replace("=","<=").replace("=",">=")
+    e = re.sub(r'([a-z])=([0-9]+)', r'\1==\2', e)
+    e = e.replace("and", ",")
+    return e
+
+def solve_with_dwcl(expr:str):
+    A = normalize_expr_worldA(expr)
+    B = normalize_expr_worldB(expr)
+
+    ansA = solve_z3(A) or solve_sympy(A)
+    ansB = solve_z3(B) or solve_sympy(B)
+
+    if ansA is None or ansB is None:
+        return None
+
+    if int(ansA) != int(ansB):
+        return None
+
+    return int(ansA)
