@@ -211,8 +211,8 @@ def _try_simple_arithmetic(s: str) -> int | None:
         return None
     expr = _clean_text(expr)
 
-    # Never evaluate exponent syntax here (overflow risk); modular engine handles '^' deterministically.
-    if '^' in expr:
+    # refuse exponentiation / pow (handled by modular engine)
+    if '**' in expr or '^' in expr or 'pow' in expr:
         return None
 
     # allow only safe arithmetic tokens
@@ -231,16 +231,16 @@ def _try_simple_arithmetic(s: str) -> int | None:
             except Exception:
                 pass
         return None
-
 def solve(text: str) -> str:
     s = _clean_text(text or "")
 
     ordered_names = [
-        "_try_modular",                # if present
+        "_try_modular",
+        "_try_micro_arith",
         "_try_trivial_eval",
         "_try_fe_additive_bounded",
         "_try_sweets_ages",
-        "_try_linear_equation",        # if present
+        "_try_linear_equation",
         "_try_simple_arithmetic",
         "_try_remainder",
     ]
@@ -256,6 +256,7 @@ def solve(text: str) -> str:
         try:
             ans = fn(s)
             if ans is not None:
+                # ensure answer stays an int (and stays small if modular applies)
                 return str(int(ans))
         except Exception:
             continue
@@ -273,7 +274,8 @@ def _main():
         ans = solve(txt)
     except Exception:
         ans = "0"
-    sys.stdout.write(str(ans).strip() + "\n")
+    sys.stdout.write(str(ans).strip() + "
+")
 
 if __name__ == "__main__":
     _main()
