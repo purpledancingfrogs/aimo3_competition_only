@@ -532,7 +532,7 @@ def solve(text: str) -> str:
         except Exception:
             pass
 
-    for fn in (_try_trivial_eval, _try_fractal_dimension, _try_fractal_counts, _try_modular, _try_fe_additive_bounded, _try_sweets_ages, _try_linear_equation, _try_simple_arithmetic, _try_remainder):
+    for fn in (_try_modular, _try_trivial_eval, _try_fractal_dimension, _try_fractal_counts, _try_fe_additive_bounded, _try_sweets_ages, _try_linear_equation, _try_simple_arithmetic, _try_remainder):
         try:
             ans = fn(s)
             if ans is not None:

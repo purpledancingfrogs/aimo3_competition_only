@@ -139,6 +139,27 @@ def try_modular(text: str) -> Optional[int]:
     s = (text or "").strip()
     sl = s.lower()
 
+    # robust fallbacks (handles punctuation/cleaning variance)
+    if "last digit" in sl:
+        mm = re.search(r"(-?\d+)\s*\^\s*(\d+)", sl)
+        if mm:
+            a = int(mm.group(1)); e = int(mm.group(2))
+            return pow_mod(a, e, 10)
+
+    if "last two digits" in sl:
+        mm = re.search(r"(-?\d+)\s*\^\s*(\d+)", sl)
+        if mm:
+            a = int(mm.group(1)); e = int(mm.group(2))
+            return pow_mod(a, e, 100)
+
+    if "remainder when" in sl and "divided by" in sl:
+        mmM = re.search(r"divided\s+by\s+(\d+)", sl)
+        mmP = re.search(r"(-?\d+)\s*\^\s*(\d+)", sl)
+        if mmM and mmP:
+            mod = int(mmM.group(1))
+            a = int(mmP.group(1)); e = int(mmP.group(2))
+            return pow_mod(a, e, mod)
+
     # last digit / last two digits
     m = re.search(r"last\s+digit\s+of\s+(-?\d+)\s*\^\s*(\d+)", sl)
     if m:
