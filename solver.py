@@ -644,10 +644,11 @@ class Solver:
 
 def _main():
     data = sys.stdin.read()
-    sys.stdout.write(solve(data).strip())
+    print(solve(data).strip())
 
 if __name__ == "__main__":
     _main()
+
 
 
 
