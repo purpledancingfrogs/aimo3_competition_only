@@ -99,3 +99,11 @@ tools/*failures*.jsonl
 tools/*summary*.txt
 tools/aimo3_submit_*.zip
 
+
+# generated test artifacts
+/tools/surrogate_summary.txt
+/tools/surrogate_failures.jsonl
+/tools/surrogate_trace_prompts.jsonl
+/tools/widebench_summary.txt
+/tools/widebench_failures.jsonl
+
