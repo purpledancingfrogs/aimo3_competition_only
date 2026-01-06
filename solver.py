@@ -922,6 +922,7 @@ def _mpv1_install():
 
 _mpv1_install()
 # === MODULEPACK_V1 END ===
+
 # === MODULEPACK_V2 BEGIN ===
 # Deterministic bounded module pack v2 (self-contained). No prints.
 
@@ -993,10 +994,9 @@ def _mpv2_safe_eval_frac(expr: str):
 def _mpv2_try_linear(prompt: str):
     s = prompt.lower()
     s = s.replace("−","-").replace("×","*").replace("^","**")
-    s = _mpv2_re.sub(r"[,
-	]", " ", s)
-    s = _mpv2_re.sub(r"\s+", " ", s).strip()
-    m = _mpv2_re.search(r"(?<![a-z0-9_])([+-]?\s*\d*)\s*\*?\s*x\s*([+-]\s*\d+)?\s*=\s*([+-]?\s*\d+)(?![a-z0-9_])", s)
+    s = _mpv2_re.sub(r"[,\\n\\r\\t]", " ", s)
+    s = _mpv2_re.sub(r"\\s+", " ", s).strip()
+    m = _mpv2_re.search(r"(?<![a-z0-9_])([+-]?\\s*\\d*)\\s*\\*?\\s*x\\s*([+-]\\s*\\d+)?\\s*=\\s*([+-]?\\s*\\d+)(?![a-z0-9_])", s)
     if not m:
         return None
     a_raw = m.group(1).replace(" ","")
@@ -1022,13 +1022,12 @@ def _mpv2_try_linear(prompt: str):
 
 def _mpv2_try_quadratic_zero(prompt: str):
     s = prompt.lower().replace("−","-").replace("^","**")
-    s = _mpv2_re.sub(r"[,
-	]", " ", s)
-    s = _mpv2_re.sub(r"\s+", " ", s).strip()
+    s = _mpv2_re.sub(r"[,\\n\\r\\t]", " ", s)
+    s = _mpv2_re.sub(r"\\s+", " ", s).strip()
     s = s.replace("x^2","x**2")
     if "x**2" not in s:
         return None
-    m = _mpv2_re.search(r"(?<![a-z0-9_])([+-]?\s*\d*)\s*\*?\s*x\*\*2\s*([+-]\s*\d*\s*\*?\s*x)?\s*([+-]\s*\d+)?\s*=\s*0(?![a-z0-9_])", s)
+    m = _mpv2_re.search(r"(?<![a-z0-9_])([+-]?\\s*\\d*)\\s*\\*?\\s*x\\*\\*2\\s*([+-]\\s*\\d*\\s*\\*?\\s*x)?\\s*([+-]\\s*\\d+)?\\s*=\\s*0(?![a-z0-9_])", s)
     if not m:
         return None
     a_raw = m.group(1).replace(" ","")
@@ -1041,8 +1040,7 @@ def _mpv2_try_quadratic_zero(prompt: str):
         except: return None
     b = 0
     if bx_term:
-        bx_term = bx_term.replace("*","")
-        bx_term = bx_term.replace("x","")
+        bx_term = bx_term.replace("*","").replace("x","")
         if bx_term in ("+", ""): b = 1
         elif bx_term == "-": b = -1
         else:
@@ -1074,10 +1072,9 @@ def _mpv2_try_remainder_pow(prompt: str):
     s = prompt.lower().replace("−","-").replace("^","**")
     if "remainder" not in s and "mod" not in s:
         return None
-    # "remainder when a^b is divided by m"
-    m = _mpv2_re.search(r"remainder\s+when\s+([+-]?\d+)\s*(?:\^|\*\*\s*)\s*([+-]?\d+)\s+is\s+divided\s+by\s+([+-]?\d+)", s)
+    m = _mpv2_re.search(r"remainder\\s+when\\s+([+-]?\\d+)\\s*(?:\\^|\\*\\*\\s*)\\s*([+-]?\\d+)\\s+is\\s+divided\\s+by\\s+([+-]?\\d+)", s)
     if not m:
-        m = _mpv2_re.search(r"([+-]?\d+)\s*(?:\^|\*\*\s*)\s*([+-]?\d+)\s*mod\s*([+-]?\d+)", s)
+        m = _mpv2_re.search(r"([+-]?\\d+)\\s*(?:\\^|\\*\\*\\s*)\\s*([+-]?\\d+)\\s*mod\\s*([+-]?\\d+)", s)
     if not m:
         return None
     a = int(m.group(1)); b = int(m.group(2)); mod = int(m.group(3))
@@ -1087,9 +1084,8 @@ def _mpv2_try_remainder_pow(prompt: str):
     return str(pow(a % mod, b, mod))
 
 def _mpv2_try_gcd_lcm(prompt: str):
-    s = prompt.lower()
-    s = s.replace("−","-")
-    nums = [int(x) for x in _mpv2_re.findall(r"(?<![a-z0-9_])[+-]?\d+(?![a-z0-9_])", s)]
+    s = prompt.lower().replace("−","-")
+    nums = [int(x) for x in _mpv2_re.findall(r"(?<![a-z0-9_])[+-]?\\d+(?![a-z0-9_])", s)]
     if len(nums) < 2 or len(nums) > 6:
         return None
     if "gcd" in s or "greatest common divisor" in s:
@@ -1112,9 +1108,9 @@ def _mpv2_try_factorial(prompt: str):
     s = prompt.lower().replace("−","-")
     if "factorial" not in s and "!" not in s:
         return None
-    m = _mpv2_re.search(r"(?<![a-z0-9_])(\d(1, 3))\s*!", s)
+    m = _mpv2_re.search(r"(?<![a-z0-9_])(\\d{1,3})\\s*!", s)
     if not m:
-        m = _mpv2_re.search(r"factorial\s+of\s+(\d(1, 3))", s)
+        m = _mpv2_re.search(r"factorial\\s+of\\s+(\\d{1,3})", s)
     if not m:
         return None
     n = int(m.group(1))
@@ -1126,15 +1122,14 @@ def _mpv2_try_nCk(prompt: str):
     s = prompt.lower()
     if "choose" not in s and "binomial" not in s and "combination" not in s and "c(" not in s:
         return None
-    m = _mpv2_re.search(r"(?<![a-z0-9_])c\s*\(\s*(\d(1, 4))\s*,\s*(\d(1, 4))\s*\)", s)
+    m = _mpv2_re.search(r"(?<![a-z0-9_])c\\s*\\(\\s*(\\d{1,4})\\s*,\\s*(\\d{1,4})\\s*\\)", s)
     if not m:
-        m = _mpv2_re.search(r"(\d(1, 4))\s+choose\s+(\d(1, 4))", s)
+        m = _mpv2_re.search(r"(\\d{1,4})\\s+choose\\s+(\\d{1,4})", s)
     if not m:
         return None
     n = int(m.group(1)); k = int(m.group(2))
     if n < 0 or k < 0 or k > n or n > 5000:
         return None
-    # bounded: refuse astronomic outputs
     try:
         v = _mpv2_math.comb(n,k)
     except Exception:
@@ -1143,14 +1138,24 @@ def _mpv2_try_nCk(prompt: str):
         return None
     return str(v)
 
+def _mpv2_try_sum_first_n(prompt: str):
+    s = prompt.lower().replace("−","-")
+    m = _mpv2_re.search(r"sum\\s+of\\s+first\\s+(\\d{1,9})\\s+(?:positive\\s+)?integers", s)
+    if not m:
+        m = _mpv2_re.search(r"sum\\s+of\\s+the\\s+first\\s+(\\d{1,9})\\s+integers", s)
+    if not m:
+        return None
+    n = int(m.group(1))
+    if n < 0 or n > 10**9:
+        return None
+    return str(n*(n+1)//2)
+
 def _mpv2_try_arith_expr(prompt: str):
-    s = prompt.strip()
-    s = s.replace("−","-").replace("×","*").replace("·","*").replace("÷","/").replace("^","**")
+    s = prompt.strip().replace("−","-").replace("×","*").replace("·","*").replace("÷","/").replace("^","**")
     cand = None
-    for piece in _mpv2_re.split(r"[:=
-]", s):
+    for piece in _mpv2_re.split(r"[:=\\n\\r]", s):
         p = piece.strip()
-        if _mpv2_re.search(r"\d", p) and _mpv2_re.search(r"[\+\-\*/%]", p) and len(p) <= 256:
+        if _mpv2_re.search(r"\\d", p) and _mpv2_re.search(r"[\\+\\-\\*/%]", p) and len(p) <= 256:
             cand = p if (cand is None or len(p) > len(cand)) else cand
     if not cand:
         return None
@@ -1158,18 +1163,6 @@ def _mpv2_try_arith_expr(prompt: str):
     if v is None or v.denominator != 1:
         return None
     return str(int(v))
-
-def _mpv2_try_sum_first_n(prompt: str):
-    s = prompt.lower().replace("−","-")
-    m = _mpv2_re.search(r"sum\s+of\s+first\s+(\d(1, 9))\s+(?:positive\s+)?integers", s)
-    if not m:
-        m = _mpv2_re.search(r"sum\s+of\s+the\s+first\s+(\d(1, 9))\s+integers", s)
-    if not m:
-        return None
-    n = int(m.group(1))
-    if n < 0 or n > 10**9:
-        return None
-    return str(n*(n+1)//2)
 
 def _mpv2_try_solve(prompt: str):
     for fn in (
