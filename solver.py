@@ -1,5 +1,82 @@
 # AUREON_DETERMINISM_PATCH
 import os as _os
+
+
+### AUREON_CRT2_BEGIN ###
+def _aureon_egcd(a: int, b: int):
+    a = int(a); b = int(b)
+    x0, y0, x1, y1 = 1, 0, 0, 1
+    while b != 0:
+        q = a // b
+        a, b = b, a - q*b
+        x0, x1 = x1, x0 - q*x1
+        y0, y1 = y1, y0 - q*y1
+    return a, x0, y0
+
+def _aureon_crt2(a1: int, m1: int, a2: int, m2: int):
+    m1 = int(m1); m2 = int(m2)
+    if m1 == 0 or m2 == 0:
+        return None
+    if m1 < 0: m1 = -m1
+    if m2 < 0: m2 = -m2
+    a1 = int(a1) % m1
+    a2 = int(a2) % m2
+    g, x, _y = _aureon_egcd(m1, m2)
+    diff = a2 - a1
+    if diff % g != 0:
+        return None
+    lcm = (m1 // g) * m2
+    k = (diff // g) * x
+    k %= (m2 // g)
+    res = (a1 + m1 * k) % lcm
+    return int(res)
+
+def _aureon_crt_try(text: str):
+    t = (text or "").strip()
+    if not t:
+        return None
+
+    # fast gate: must mention congruence/mod
+    tl = t.lower()
+    if ("mod" not in tl) and ("?" not in t) and ("congruent" not in tl):
+        return None
+
+    tt = t.replace("?", "=")
+
+    # patterns:
+    #   x = a (mod m)
+    #   x = a mod m
+    #   x congruent to a (mod m)
+    congs = []
+
+    for m in re.finditer(r'(?is)\bx\s*=\s*([-+]?\d+)\s*\(\s*mod\s*([-+]?\d+)\s*\)', tt):
+        congs.append((int(m.group(1)), int(m.group(2))))
+    for m in re.finditer(r'(?is)\bx\s*=\s*([-+]?\d+)\s*(?:mod|modulo)\s*([-+]?\d+)\b', tt):
+        congs.append((int(m.group(1)), int(m.group(2))))
+    for m in re.finditer(r'(?is)\bx\s*congruent\s*to\s*([-+]?\d+)\s*\(\s*mod\s*([-+]?\d+)\s*\)', tt):
+        congs.append((int(m.group(1)), int(m.group(2))))
+
+    # de-dup preserve order
+    seen = set()
+    uniq = []
+    for a,mv in congs:
+        key = (a, mv)
+        if key in seen:
+            continue
+        seen.add(key)
+        uniq.append((a, mv))
+    congs = uniq
+
+    if len(congs) < 2:
+        return None
+
+    (a1, m1), (a2, m2) = congs[0], congs[1]
+    x = _aureon_crt2(a1, m1, a2, m2)
+    if x is None:
+        return None
+    return str(int(x))
+### AUREON_CRT2_END ###
+
 _os.environ.setdefault('PYTHONHASHSEED','0')
 import unicodedata as _unicodedata
 import re as _re
@@ -904,6 +981,17 @@ def solve(problem_text: str) -> str:
     # OVERRIDE_RUNTIME_FIX_END
 
     t = _norm_text(problem_text)
+
+    ### AUREON_CRT_CALL_BEGIN ###
+
+    v = _aureon_crt_try(problem_text)
+
+    if v is not None:
+
+        return v
+
+    ### AUREON_CRT_CALL_END ###
+
     if not t:
         return "0"
     # hard cap to prevent regex/sympy blowups
