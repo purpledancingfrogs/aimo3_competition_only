@@ -62,3 +62,10 @@ tools/edge_case_verify.py
 
 tools/fail_summary.py
 
+tools/surrogate_summary.txt
+tools/surrogate_failures.jsonl
+tools/surrogate_last.txt
+tools/failure_top15.txt
+tools/failure_examples.txt
+tools/widebench_eval_last.txt
+tools/csv_truth_last.txt
