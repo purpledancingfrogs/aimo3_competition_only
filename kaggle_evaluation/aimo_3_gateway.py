@@ -1,6 +1,11 @@
 import re
 import polars as pl
 
+# AUREON_PATHFIX
+import os as _os, sys as _sys
+_ROOT = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+if _ROOT not in _sys.path: _sys.path.insert(0, _ROOT)
+
 I64_MIN = -(2**63)
 I64_MAX =  (2**63 - 1)
 

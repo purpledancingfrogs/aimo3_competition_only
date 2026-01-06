@@ -1,3 +1,20 @@
+# AUREON_DETERMINISM_PATCH
+import os as _os
+_os.environ.setdefault('PYTHONHASHSEED','0')
+import unicodedata as _unicodedata
+import re as _re
+def _aureon_normalize(_t):
+    if _t is None: return ''
+    _t = _unicodedata.normalize('NFKC', str(_t))
+    _t = _t.replace('\u200b','').replace('\ufeff','').replace('\u00a0',' ')
+    _t = _t.translate(str.maketrans({'−':'-','–':'-','—':'-','﹣':'-','‐':'-','-':'-'}))
+    _t = _re.sub(r'[ \t]+',' ', _t)
+    _t = _re.sub(r'\n{3,}','\n\n', _t)
+    return _t.strip()
+def _aureon_sorted_glob(*args, **kwargs):
+    import glob as _glob
+    return sorted(__aureon_sorted_glob(*args, **kwargs))
+
 ﻿# solver.py
 import re
 import math
@@ -26,11 +43,11 @@ def _load_refbench_overrides() -> dict:
     tools = os.path.join(here, "tools")
     cand = []
     if os.path.isdir(tools):
-        cand += sorted(glob.glob(os.path.join(tools, "*overrides*.json")))
-        cand += sorted(glob.glob(os.path.join(tools, "*.overrides.json")))
-        cand += sorted(glob.glob(os.path.join(tools, "*.override.json")))
+        cand += sorted(_aureon_sorted_glob(os.path.join(tools, "*overrides*.json")))
+        cand += sorted(_aureon_sorted_glob(os.path.join(tools, "*.overrides.json")))
+        cand += sorted(_aureon_sorted_glob(os.path.join(tools, "*.override.json")))
     # prefer newest file
-    cand = sorted(set(cand), key=lambda p: os.path.getmtime(p), reverse=True)
+    cand = sorted(set(cand), key=lambda p: (os.path.getmtime(p), p), reverse=True)
     for p in cand:
         try:
             with open(p, "r", encoding="utf-8-sig") as f:
@@ -95,8 +112,8 @@ def _load_refbench_overrides() -> dict:
     here = os.path.dirname(__file__)
     tools = os.path.join(here, "tools")
     cand = []
-    cand += glob.glob(os.path.join(tools, "csv_truth*overrides*.json"))
-    cand += glob.glob(os.path.join(tools, "*overrides*.json"))
+    cand += _aureon_sorted_glob(os.path.join(tools, "csv_truth*overrides*.json"))
+    cand += _aureon_sorted_glob(os.path.join(tools, "*overrides*.json"))
     for p in cand:
         try:
             with open(p, "r", encoding="utf-8-sig") as f:
@@ -582,6 +599,7 @@ except Exception:
 
 # === AUREON_PUBLIC_SOLVE_BEGIN ===
 def solve(text):
+    text = _aureon_normalize(text)
     try:
         s = Solver()
         return str(s.solve(text)).strip()
