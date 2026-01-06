@@ -56,3 +56,9 @@ tools/__pycache__/
 tools/selfplay_v1.jsonl
 tools/selfplay_failures_v1.json
 
+
+tools/edge_case_verify.py
+
+
+tools/fail_summary.py
+
