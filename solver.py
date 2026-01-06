@@ -926,3 +926,16 @@ def solve(problem_text: str) -> str:
             return _int_mod_1000(int(r2))
         except Exception:
             return "0"
+
+### AUREON_DIGITS_ONLY_WRAPPER_BEGIN ###
+try:
+    _AUREON_SOLVE_INNER = solve
+    def solve(problem_text):
+        out = _AUREON_SOLVE_INNER(problem_text)
+        out = str(out).strip()
+        if out.startswith("-"):
+            return "0"
+        return out if re.fullmatch(r"\d+", out or "") else "0"
+except Exception:
+    pass
+### AUREON_DIGITS_ONLY_WRAPPER_END ###
