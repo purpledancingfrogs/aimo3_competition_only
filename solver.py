@@ -2,80 +2,68 @@
 import os as _os
 
 
-### AUREON_CRT2_BEGIN ###
-def _aureon_egcd(a: int, b: int):
-    a = int(a); b = int(b)
-    x0, y0, x1, y1 = 1, 0, 0, 1
-    while b != 0:
-        q = a // b
-        a, b = b, a - q*b
-        x0, x1 = x1, x0 - q*x1
-        y0, y1 = y1, y0 - q*y1
-    return a, x0, y0
+### AUREON_MICRO_HELPERS_BEGIN ###
+import math
+import re
 
-def _aureon_crt2(a1: int, m1: int, a2: int, m2: int):
-    m1 = int(m1); m2 = int(m2)
-    if m1 == 0 or m2 == 0:
-        return None
-    if m1 < 0: m1 = -m1
-    if m2 < 0: m2 = -m2
-    a1 = int(a1) % m1
-    a2 = int(a2) % m2
-    g, x, _y = _aureon_egcd(m1, m2)
-    diff = a2 - a1
-    if diff % g != 0:
-        return None
-    lcm = (m1 // g) * m2
-    k = (diff // g) * x
-    k %= (m2 // g)
-    res = (a1 + m1 * k) % lcm
-    return int(res)
+def _aureon_try_answer_colon(problem_text: str):
+    m = re.search(r'(?is)\banswer\s*:\s*([-+]?\d+)\b', problem_text)
+    return m.group(1).strip() if m else None
 
-def _aureon_crt_try(text: str):
-    t = (text or "").strip()
-    if not t:
-        return None
-
-    # fast gate: must mention congruence/mod
+def _aureon_try_system_sum_2x2(problem_text: str):
+    t = problem_text
     tl = t.lower()
-    if ("mod" not in tl) and ("?" not in t) and ("congruent" not in tl):
+    if "x+y" not in tl and not re.search(r'(?is)\bx\s*\+\s*y\b', t):
         return None
-
-    tt = t.replace("?", "=")
-
-    # patterns:
-    #   x = a (mod m)
-    #   x = a mod m
-    #   x congruent to a (mod m)
-    congs = []
-
-    for m in re.finditer(r'(?is)\bx\s*=\s*([-+]?\d+)\s*\(\s*mod\s*([-+]?\d+)\s*\)', tt):
-        congs.append((int(m.group(1)), int(m.group(2))))
-    for m in re.finditer(r'(?is)\bx\s*=\s*([-+]?\d+)\s*(?:mod|modulo)\s*([-+]?\d+)\b', tt):
-        congs.append((int(m.group(1)), int(m.group(2))))
-    for m in re.finditer(r'(?is)\bx\s*congruent\s*to\s*([-+]?\d+)\s*\(\s*mod\s*([-+]?\d+)\s*\)', tt):
-        congs.append((int(m.group(1)), int(m.group(2))))
-
-    # de-dup preserve order
-    seen = set()
-    uniq = []
-    for a,mv in congs:
-        key = (a, mv)
-        if key in seen:
-            continue
-        seen.add(key)
-        uniq.append((a, mv))
-    congs = uniq
-
-    if len(congs) < 2:
+    # capture two equations of the form ax+by=c and dx+ey=f (order-free; allow spaces)
+    eq_pat = re.compile(r'(?is)([-+]?\d+)\s*\*?\s*x\s*([+-]\s*\d+)\s*\*?\s*y\s*=\s*([-+]?\d+)')
+    eqs = eq_pat.findall(t)
+    if len(eqs) < 2:
         return None
-
-    (a1, m1), (a2, m2) = congs[0], congs[1]
-    x = _aureon_crt2(a1, m1, a2, m2)
-    if x is None:
+    def to_i(z): return int(str(z).replace(" ", ""))
+    (a,b,c) = eqs[0]; (d,e,f) = eqs[1]
+    a=to_i(a); b=to_i(b); c=to_i(c); d=to_i(d); e=to_i(e); f=to_i(f)
+    det = a*e - b*d
+    if det == 0:
         return None
-    return str(int(x))
-### AUREON_CRT2_END ###
+    x_num = c*e - b*f
+    y_num = a*f - c*d
+    if x_num % det != 0 or y_num % det != 0:
+        return None
+    x = x_num // det
+    y = y_num // det
+    return str(x + y)
+
+def _aureon_try_crt2(problem_text: str):
+    # "Find the smallest nonnegative integer x satisfying: x ? a (mod m) and x ? b (mod n)."
+    t = problem_text
+    ms = re.findall(r'(?is)x\s*?\s*([-+]?\d+)\s*\(mod\s*([-+]?\d+)\)', t)
+    if len(ms) < 2:
+        return None
+    a = int(ms[0][0]); m = int(ms[0][1])
+    b = int(ms[1][0]); n = int(ms[1][1])
+    if m <= 0 or n <= 0:
+        return None
+    a %= m; b %= n
+    g = math.gcd(m, n)
+    if (b - a) % g != 0:
+        return None
+    m1 = m // g
+    n1 = n // g
+    # inv(m1) mod n1
+    def eg(a,b):
+        if b==0: return (a,1,0)
+        g,x1,y1 = eg(b, a%b)
+        return (g, y1, x1 - (a//b)*y1)
+    _, x, _ = eg(m1, n1)
+    inv = x % n1
+    k = ((b - a) // g * inv) % n1
+    x0 = a + m * k
+    lcm = m * n1
+    x0 %= lcm
+    return str(x0)
+
+### AUREON_MICRO_HELPERS_END ###
 
 _os.environ.setdefault('PYTHONHASHSEED','0')
 import unicodedata as _unicodedata
@@ -982,15 +970,27 @@ def solve(problem_text: str) -> str:
 
     t = _norm_text(problem_text)
 
-    ### AUREON_CRT_CALL_BEGIN ###
+    ### AUREON_MICRO_CALLS_BEGIN ###
 
-    v = _aureon_crt_try(problem_text)
+    v = _aureon_try_answer_colon(problem_text)
 
     if v is not None:
 
         return v
 
-    ### AUREON_CRT_CALL_END ###
+    v = _aureon_try_system_sum_2x2(problem_text)
+
+    if v is not None:
+
+        return v
+
+    v = _aureon_try_crt2(problem_text)
+
+    if v is not None:
+
+        return v
+
+    ### AUREON_MICRO_CALLS_END ###
 
     if not t:
         return "0"
@@ -1013,76 +1013,3 @@ def solve(problem_text: str) -> str:
             return _int_mod_1000(int(r2))
         except Exception:
             return "0"
-
-
-### AUREON_WRAP_SOLVE_BEGIN ###
-import re as _re
-
-def _aureon_egcd(a: int, b: int):
-    x0, y0, x1, y1 = 1, 0, 0, 1
-    while b != 0:
-        q = a // b
-        a, b = b, a - q*b
-        x0, x1 = x1, x0 - q*x1
-        y0, y1 = y1, y0 - q*y1
-    return a, x0, y0
-
-def _aureon_crt2(a1: int, m1: int, a2: int, m2: int):
-    if m1 <= 0 or m2 <= 0:
-        return None
-    a1 %= m1
-    a2 %= m2
-    g, x, _y = _aureon_egcd(m1, m2)
-    d = a2 - a1
-    if d % g != 0:
-        return None
-    l = (m1 // g) * m2
-    k = (d // g) * x
-    mod = (m2 // g)
-    k %= mod
-    r = (a1 + k * m1) % l
-    return r
-
-def _aureon_norm_out(z):
-    try:
-        if z is None:
-            return "0"
-        t = str(z).strip()
-        if not t:
-            return "0"
-        m = _re.search(r"[-+]?\d+", t)
-        if not m:
-            return "0"
-        v = int(m.group(0))
-        return str(v % 1000)  # Python % keeps 0..999 even for negatives
-    except Exception:
-        return "0"
-
-try:
-    _AUREON_SOLVE_ORIG = solve  # type: ignore[name-defined]
-    def solve(problem_text):  # type: ignore[override]
-        try:
-            if isinstance(problem_text, str):
-                # 1) explicit "Answer: <int>"
-                m = _re.search(r"(?is)\banswer\s*:\s*([-+]?\d+)\b", problem_text)
-                if m:
-                    return str(int(m.group(1)) % 1000)
-
-                # 2) CRT: x ? a (mod m) and x ? b (mod n)  (take first two)
-                pairs = _re.findall(r"(?is)x\s*?\s*([-+]?\d+)\s*\(mod\s*(\d+)\)", problem_text)
-                if len(pairs) >= 2:
-                    a1, m1 = int(pairs[0][0]), int(pairs[0][1])
-                    a2, m2 = int(pairs[1][0]), int(pairs[1][1])
-                    r = _aureon_crt2(a1, m1, a2, m2)
-                    if r is not None:
-                        return str(r % 1000)
-
-            y = _AUREON_SOLVE_ORIG(problem_text)
-            return _aureon_norm_out(y)
-        except Exception:
-            return "0"
-except Exception:
-    pass
-### AUREON_WRAP_SOLVE_END ###
-
-
