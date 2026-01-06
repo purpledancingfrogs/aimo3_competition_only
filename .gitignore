@@ -43,3 +43,11 @@ kaggle_kernel_src/
 tools/_outputs/
 tools/csv_truth_*
 tools/backup_solver_*.py
+# AIMO3 local tool outputs
+tools/csv_truth_*_summary.txt
+tools/csv_truth_*_failures.jsonl
+tools/*_summary.txt
+tools/*_failures.jsonl
+tools/*_report.json
+tools/.pytest_cache/
+tools/__pycache__/
