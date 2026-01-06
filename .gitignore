@@ -69,3 +69,11 @@ tools/failure_top15.txt
 tools/failure_examples.txt
 tools/widebench_eval_last.txt
 tools/csv_truth_last.txt
+
+# local eval outputs
+tools/local_eval.py
+tools/eval_summary_*.txt
+tools/eval_failures_*.jsonl
+tools/eval_summary_reference.txt
+tools/eval_failures_reference.jsonl
+
