@@ -6,5 +6,13 @@
     {
         "path":  "requirements.txt",
         "blob_sha256":  "b9f57c792e2cfed4447b72eb5cfde70b258299cf66ba827166ce77579a3b2fc1"
+    },
+    {
+        "path":  "kaggle_evaluation\\aimo_3_gateway.py",
+        "blob_sha256":  "d96ab740410a7bb33f04f255af456d6cf3b84ebb12c42cfa8fd55a341bf78ba3"
+    },
+    {
+        "path":  "kaggle_evaluation\\aimo_3_inference_server.py",
+        "blob_sha256":  "03cad29ff63f5f714909ef9eed3a1b94d3385e688a3130141b9586e7d57fc323"
     }
 ]
