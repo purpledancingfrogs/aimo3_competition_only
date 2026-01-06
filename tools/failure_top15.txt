@@ -1,7 +1,13 @@
 ﻿
-file                                  key  group count
-----                                  ---  ----- -----
-tools\csv_truth_kaggle_failures.jsonl type          10
-
-
+==== tools\csv_truth_kaggle_failures.jsonl :: key=row ====
+1	6
+1	5
+1	7
+1	9
+1	8
+1	1
+1	0
+1	2
+1	4
+1	3
 
