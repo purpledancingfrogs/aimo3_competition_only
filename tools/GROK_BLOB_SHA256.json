@@ -1,0 +1,10 @@
+﻿[
+    {
+        "path":  "solver.py",
+        "blob_sha256":  "c69b9bcaeeb5c95eef027fd765e4984ba198fdc423fca10f7ebf749f0efa7dad"
+    },
+    {
+        "path":  "requirements.txt",
+        "blob_sha256":  "b9f57c792e2cfed4447b72eb5cfde70b258299cf66ba827166ce77579a3b2fc1"
+    }
+]
