@@ -884,3 +884,41 @@ if _AUREON__Solver is not None:
         _AUREON__Solver.solve = _AUREON__solve_wrapper  # type: ignore[assignment]
     except Exception:
         pass
+# === MODULEPACK_V1 BEGIN ===
+# Deterministic bounded module pack. No prints. Returns integer-string or None.
+
+def _mpv1_try_solve(_prompt: str):
+    try:
+        return try_solve(_prompt)
+    except Exception:
+        return None
+
+def _mpv1_install():
+    # Prefer patching Solver.solve; fallback to module-level solve(prompt)
+    try:
+        cls = globals().get("Solver", None)
+        if cls is not None and hasattr(cls, "solve"):
+            _old = cls.solve
+            def _new(self, prompt):
+                a = _mpv1_try_solve(prompt)
+                if a is not None:
+                    return a
+                return _old(self, prompt)
+            cls.solve = _new
+            return
+    except Exception:
+        pass
+    try:
+        if "solve" in globals() and callable(globals()["solve"]):
+            _old2 = globals()["solve"]
+            def solve(prompt):
+                a = _mpv1_try_solve(prompt)
+                if a is not None:
+                    return a
+                return _old2(prompt)
+            globals()["solve"] = solve
+    except Exception:
+        pass
+
+_mpv1_install()
+# === MODULEPACK_V1 END ===
