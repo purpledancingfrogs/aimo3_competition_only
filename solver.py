@@ -904,6 +904,17 @@ def solve(problem_text: str) -> str:
     # OVERRIDE_RUNTIME_FIX_END
 
     t = _norm_text(problem_text)
+
+    ### AUREON_ANSWER_COLON_BEGIN ###
+
+    m_ans = re.search(r'(?is)\banswer\s*:\s*([-+]?\d+)\b', problem_text)
+
+    if m_ans:
+
+        return m_ans.group(1).strip()
+
+    ### AUREON_ANSWER_COLON_END ###
+
     if not t:
         return "0"
     # hard cap to prevent regex/sympy blowups
