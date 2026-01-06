@@ -1,4 +1,4 @@
-﻿import re
+import re
 import polars as pl
 
 I64_MIN = -(2**63)
