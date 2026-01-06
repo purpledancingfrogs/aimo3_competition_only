@@ -77,3 +77,8 @@ tools/eval_failures_*.jsonl
 tools/eval_summary_reference.txt
 tools/eval_failures_reference.jsonl
 
+
+# local audit outputs
+tools/self_audit.py
+tools/adversarial_prompts.txt
+
