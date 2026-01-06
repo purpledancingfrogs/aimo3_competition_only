@@ -1,5 +1,24 @@
-﻿import csv, json, re
+import csv, json, re
 from pathlib import Path
+import re
+
+# AUREON_MOD1000_AUDIT
+import re as _re
+def _aureon_mod1000_int(x):
+    try:
+        if x is None:
+            return None
+        t = str(x).strip()
+        if not t:
+            return None
+        m = _re.search(r"[-+]?\d+", t)
+        if not m:
+            return None
+        return int(m.group(0)) % 1000
+    except Exception:
+        return None
+# /AUREON_MOD1000_AUDIT
+
 
 def find_candidate_files(root: Path):
     include = []
