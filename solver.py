@@ -647,7 +647,9 @@ def _norm_text(t: str) -> str:
     return t.strip()
 
 def _int_mod_1000(x: int) -> str:
-    return str(int(x) % 1000)
+    ### AUREON_NO_MOD1000_BEGIN ###
+return str(int(x))
+### AUREON_NO_MOD1000_END ###
 
 @_contextlib.contextmanager
 def _silence_stdio():
