@@ -4,8 +4,22 @@ import math
 from typing import Optional, Tuple, List
 
 _INT_RE = re.compile(r"-?\d+")
-_EQ_RE = re.compile(r"(?P<lhs>[^\r\n=]{1,140}?[xy][^\r\n=]{0,140}?)\s*=\s*(?P<rhs>-?\d+)\b", re.IGNORECASE)
-_CONG_RE = re.compile(r"x\s*≡\s*(-?\d+)\s*\(\s*mod\s*(\d+)\s*\)", re.IGNORECASE)
+_EQ_RE = re.compile(
+    r"(?P<lhs>[^\r\n=]{1,160}?[xy][^\r\n=]{0,160}?)\s*=\s*(?P<rhs>-?\d+)\b",
+    re.IGNORECASE,
+)
+_CONG_RE = re.compile(
+    r"x\s*(?:≡|=)\s*(-?\d+)\s*\(\s*mod\s*(-?\d+)\s*\)",
+    re.IGNORECASE,
+)
+_POWMOD_RE = re.compile(
+    r"(-?\d+)\s*(?:\^|\*\*)\s*(-?\d+)\s*mod\s*(-?\d+)",
+    re.IGNORECASE,
+)
+_GCD_RE = re.compile(r"gcd\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)", re.IGNORECASE)
+_LCM_RE = re.compile(r"lcm\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)", re.IGNORECASE)
+_NCK_RE_1 = re.compile(r"\b(?:c|choose)\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)", re.IGNORECASE)
+_NCK_RE_2 = re.compile(r"\bC\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)")
 
 def _norm(s: str) -> str:
     s = s.replace("\u2212", "-").replace("\u2013", "-").replace("\u2014", "-")
@@ -17,14 +31,33 @@ def _first_int(s: str) -> Optional[int]:
     m = _INT_RE.search(s)
     return int(m.group(0)) if m else None
 
-def _math_segment(s: str) -> str:
-    # take the last plausible math segment (strip leading prose like "Solve for x:")
-    s = _norm(s)
-    s = s.replace("\r", " ").replace("\n", " ")
-    # keep only segments composed of math-ish tokens
-    segs = re.findall(r"[0-9xXyY+\-*\s]{1,220}", s)
-    segs = [seg.strip() for seg in segs if seg and ("x" in seg.lower() or "y" in seg.lower()) and re.search(r"\d", seg)]
-    return segs[-1] if segs else s
+def _safe_mod(m: int) -> Optional[int]:
+    if m == 0:
+        return None
+    return abs(int(m))
+
+def _norm_residue(a: int, m: int) -> int:
+    return a % m
+
+def _egcd(a: int, b: int) -> Tuple[int, int, int]:
+    if b == 0:
+        return (a, 1, 0)
+    g, x1, y1 = _egcd(b, a % b)
+    return (g, y1, x1 - (a // b) * y1)
+
+def _inv_mod(a: int, m: int) -> Optional[int]:
+    a %= m
+    if a == 0:
+        return None
+    if math.gcd(a, m) != 1:
+        return None
+    try:
+        return pow(a, -1, m)
+    except Exception:
+        g, x, _ = _egcd(a, m)
+        if g != 1:
+            return None
+        return x % m
 
 def _parse_lhs_ax_by_const(lhs: str) -> Optional[Tuple[int, int, int]]:
     lhs = _norm(lhs).replace(" ", "")
@@ -77,8 +110,7 @@ def _extract_two_xy_equations(text: str) -> Optional[List[Tuple[int, int, int]]]
     for m in matches:
         lhs = m.group("lhs")
         rhs = int(m.group("rhs"))
-        lhs_expr = _math_segment(lhs)
-        parsed = _parse_lhs_ax_by_const(lhs_expr)
+        parsed = _parse_lhs_ax_by_const(lhs)
         if parsed is None:
             continue
         a, b, k = parsed
@@ -106,82 +138,85 @@ def _handle_system_sum(text: str) -> Optional[str]:
 
 def _handle_nCk(text: str) -> Optional[str]:
     t = text.lower()
-    m = re.search(r"\b(?:c|choose)\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)", t)
+    m = _NCK_RE_1.search(t)
     if not m:
-        m = re.search(r"\b(\d+)\s*c\s*(\d+)\b", t)
-    if not m:
-        if "nck" not in t and "binomial" not in t and "comb" not in t and "c(" not in t:
-            return None
-        # fallback: "Compute C(n,k)" variants with uppercase C
-        m = re.search(r"\bC\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)", text)
+        m = _NCK_RE_2.search(text)
     if not m:
         return None
     n = int(m.group(1)); k = int(m.group(2))
     if k < 0 or n < 0 or k > n:
         return None
+    if n > 200000:
+        return None
     return str(math.comb(n, k))
 
 def _crt_pair(a1: int, m1: int, a2: int, m2: int) -> Optional[Tuple[int, int]]:
-    # returns (a, m) with x ≡ a (mod m)
     g = math.gcd(m1, m2)
     if (a2 - a1) % g != 0:
         return None
-    l = m1 // g * m2
+    l = (m1 // g) * m2
     m1g = m1 // g
     m2g = m2 // g
-    # solve m1 * t ≡ (a2-a1) (mod m2)
-    # reduce: m1g * t ≡ (a2-a1)/g (mod m2g)
     rhs = (a2 - a1) // g
-    inv = pow(m1g % m2g, -1, m2g)
+    if m2g == 1:
+        return (a1 % l, l)
+    inv = _inv_mod(m1g % m2g, m2g)
+    if inv is None:
+        return None
     t = (rhs % m2g) * inv % m2g
     a = (a1 + m1 * t) % l
     return a, l
 
 def _handle_crt(text: str) -> Optional[str]:
     t = text.lower()
-    if "≡" not in text and "mod" not in t:
+    if "mod" not in t and "≡" not in text:
         return None
-    congr = [(int(a), int(m)) for (a, m) in _CONG_RE.findall(text)]
+    congr = []
+    for a_s, m_s in _CONG_RE.findall(text):
+        mi0 = int(m_s)
+        mi = _safe_mod(mi0)
+        if mi is None:
+            return None
+        if mi == 1:
+            continue
+        ai = _norm_residue(int(a_s), mi)
+        congr.append((ai, mi))
     if len(congr) < 2:
         return None
-    a, m = congr[0][0] % congr[0][1], congr[0][1]
-    for (ai, mi) in congr[1:]:
-        ai = ai % mi
+    a, m = congr[0]
+    for ai, mi in congr[1:]:
         res = _crt_pair(a, m, ai, mi)
         if res is None:
             return None
         a, m = res
-    return str(a)
+    return str(a % m)
 
 def _handle_powmod(text: str) -> Optional[str]:
     t = text.lower()
     if "mod" not in t:
         return None
-    m = re.search(r"(-?\d+)\s*\^\s*(-?\d+)\s*mod\s*(-?\d+)", t)
-    if not m:
-        m = re.search(r"(-?\d+)\s*\*\*\s*(-?\d+)\s*mod\s*(-?\d+)", t)
+    m = _POWMOD_RE.search(text) or _POWMOD_RE.search(t)
     if not m:
         return None
-    a = int(m.group(1)); e = int(m.group(2)); mod = int(m.group(3))
-    if mod == 0 or e < 0:
+    a = int(m.group(1)); e = int(m.group(2)); mod0 = int(m.group(3))
+    mod = _safe_mod(mod0)
+    if mod is None or e < 0:
         return None
-    return str(pow(a, e, mod))
+    if mod == 1:
+        return "0"
+    try:
+        return str(pow(a, e, mod))
+    except Exception:
+        return None
 
 def _handle_gcd(text: str) -> Optional[str]:
-    t = text.lower()
-    if "gcd" not in t:
-        return None
-    m = re.search(r"gcd\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)", t)
+    m = _GCD_RE.search(text) or _GCD_RE.search(text.lower())
     if not m:
         return None
-    a = int(m.group(1)); b = int(m.group(2))
-    return str(math.gcd(a, b))
+    return str(math.gcd(int(m.group(1)), int(m.group(2))))
 
 def _handle_lcm(text: str) -> Optional[str]:
-    t = text.lower()
-    if "lcm" not in t:
-        return None
-    m = re.search(r"lcm\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)", t)
+    m = _LCM_RE.search(text) or _LCM_RE.search(text.lower())
     if not m:
         return None
     a = int(m.group(1)); b = int(m.group(2))
@@ -192,23 +227,19 @@ def _handle_lcm(text: str) -> Optional[str]:
 
 def _handle_linear_x(text: str) -> Optional[str]:
     t = _norm(text)
-    # pick the first equation that ends with "= <int>"
     m = re.search(r"([^\r\n=]{1,220}?x[^\r\n=]{0,220}?)\s*=\s*(-?\d+)\b", t, re.IGNORECASE)
     if not m:
         return None
-    lhs_raw = m.group(1)
+    lhs = m.group(1).replace(" ", "")
     rhs = int(m.group(2))
-    lhs_expr = _math_segment(lhs_raw)
-    if lhs_expr.lower().count("x") != 1:
+    if lhs.lower().count("x") != 1:
         return None
-    lhs_expr = lhs_expr.replace(" ", "")
-    if re.search(r"[^0-9xX+\-*]", lhs_expr):
+    if re.search(r"[^0-9xX+\-*]", lhs):
         return None
-    if lhs_expr[0] not in "+-":
-        lhs_expr = "+" + lhs_expr
-    terms = re.findall(r"[+-][^+-]+", lhs_expr)
-    a = 0
-    k = 0
+    if lhs[0] not in "+-":
+        lhs = "+" + lhs
+    terms = re.findall(r"[+-][^+-]+", lhs)
+    a = 0; k = 0
     for term in terms:
         sign = -1 if term[0] == "-" else 1
         body = term[1:]
@@ -259,46 +290,29 @@ def _handle_fact_digitsum(text: str) -> Optional[str]:
 class Solver:
     def solve(self, prompt: str) -> str:
         s = _norm(prompt)
-
-        out = _handle_system_sum(s)
-        if out is not None:
-            return out
-
-        out = _handle_nCk(s)
-        if out is not None:
-            return out
-
-        out = _handle_crt(s)
-        if out is not None:
-            return out
-
-        out = _handle_powmod(s)
-        if out is not None:
-            return out
-
-        out = _handle_gcd(s)
-        if out is not None:
-            return out
-
-        out = _handle_lcm(s)
-        if out is not None:
-            return out
-
-        out = _handle_linear_x(s)
-        if out is not None:
-            return out
-
-        out = _handle_fact_digitsum(s)
-        if out is not None:
-            return out
-
+        try:
+            for fn in (
+                _handle_system_sum,
+                _handle_nCk,
+                _handle_crt,
+                _handle_powmod,
+                _handle_gcd,
+                _handle_lcm,
+                _handle_linear_x,
+                _handle_fact_digitsum,
+            ):
+                out = fn(s)
+                if out is not None:
+                    out = out.strip()
+                    return out if re.fullmatch(r"-?\d+", out) else "0"
+        except Exception:
+            return "0"
         v = _first_int(s)
         return str(v if v is not None else 0)
 
 if __name__ == "__main__":
     import sys
-    data = sys.stdin.read()
-    ans = Solver().solve(data).strip()
+    ans = Solver().solve(sys.stdin.read()).strip()
     if not re.fullmatch(r"-?\d+", ans):
         ans = "0"
     sys.stdout.write(ans)
