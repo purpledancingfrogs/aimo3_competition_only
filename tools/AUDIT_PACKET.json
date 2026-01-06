@@ -1,0 +1,37 @@
+﻿{
+    "head":  "459c3ee5bdd3cdf13df4dc57ff6f169c8eaf71f6",
+    "refs":  {
+                 "origin_aimo3_top1_dev2":  "459c3ee5bdd3cdf13df4dc57ff6f169c8eaf71f6",
+                 "origin_aimo3_kaggle_submit":  "459c3ee5bdd3cdf13df4dc57ff6f169c8eaf71f6",
+                 "tag_aimo3_submission_ready":  "459c3ee5bdd3cdf13df4dc57ff6f169c8eaf71f6"
+             },
+    "submission":  {
+                       "blobs":  [
+                                     {
+                                         "path":  "solver.py",
+                                         "blob_sha256":  "c69b9bcaeeb5c95eef027fd765e4984ba198fdc423fca10f7ebf749f0efa7dad"
+                                     },
+                                     {
+                                         "path":  "requirements.txt",
+                                         "blob_sha256":  "b9f57c792e2cfed4447b72eb5cfde70b258299cf66ba827166ce77579a3b2fc1"
+                                     },
+                                     {
+                                         "path":  "kaggle_evaluation/aimo_3_gateway.py",
+                                         "blob_sha256":  "d96ab740410a7bb33f04f255af456d6cf3b84ebb12c42cfa8fd55a341bf78ba3"
+                                     },
+                                     {
+                                         "path":  "kaggle_evaluation/aimo_3_inference_server.py",
+                                         "blob_sha256":  "03cad29ff63f5f714909ef9eed3a1b94d3385e688a3130141b9586e7d57fc323"
+                                     }
+                                 ],
+                       "files":  [
+                                     "solver.py",
+                                     "requirements.txt",
+                                     "kaggle_evaluation/aimo_3_gateway.py",
+                                     "kaggle_evaluation/aimo_3_inference_server.py"
+                                 ],
+                       "zip_path":  "tools\\aimo3_submit_459c3ee.zip",
+                       "zip_sha256":  "452F0064AFB73E81398DBF4659F90B23F1D7FD2651BB50705C08A932ED306E2E"
+                   },
+    "created_utc":  "2026-01-06T15:57:08.7370949Z"
+}
