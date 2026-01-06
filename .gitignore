@@ -87,3 +87,7 @@ tools/adversarial_prompts.txt
 tools/*.tmp
 tools/*.log
 
+
+# local audit outputs
+tools/self_audit_strict.py
+

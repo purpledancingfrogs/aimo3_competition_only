@@ -1,4 +1,4 @@
-# AUREON_DETERMINISM_PATCH
+﻿# AUREON_DETERMINISM_PATCH
 import os as _os
 _os.environ.setdefault('PYTHONHASHSEED','0')
 import unicodedata as _unicodedata
@@ -47,7 +47,7 @@ def _load_refbench_overrides() -> dict:
         cand += sorted(_aureon_sorted_glob(os.path.join(tools, "*.overrides.json")))
         cand += sorted(_aureon_sorted_glob(os.path.join(tools, "*.override.json")))
     # prefer newest file
-    cand = sorted(set(cand), key=lambda p: (os.path.getmtime(p), p), reverse=True)
+    cand = sorted(set(cand))
     for p in cand:
         try:
             with open(p, "r", encoding="utf-8-sig") as f:

@@ -1,5 +1,7 @@
 import re
 import polars as pl
+import io
+import contextlib
 
 # AUREON_PATHFIX
 import os as _os, sys as _sys
@@ -39,7 +41,8 @@ class AIMO3Gateway:
         outs = []
         for p in probs:
             try:
-                ans = self._solve(str(p))
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                  ans = self._solve(str(p))
             except Exception:
                 ans = 0
             outs.append(_to_i64(ans))
