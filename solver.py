@@ -373,6 +373,66 @@ def _handle_fact_digitsum(text: str) -> Optional[str]:
     ds = sum(ord(ch) - 48 for ch in str(f))
     return str(ds)
 
+# === AUREON_NORM2_MOJIBAKE_BEGIN ===
+def _norm2(prompt: str) -> str:
+    s = _norm2(prompt)
+    # common UTF-8->cp1252 mojibake from exported datasets
+    s = (s.replace("â‰¡", "≡")
+           .replace("â‰¤", "≤")
+           .replace("â‰¥", "≥")
+           .replace("Â", ""))
+    return s
+# === AUREON_NORM2_MOJIBAKE_END ===
+
+# === AUREON_CRT_BEGIN ===
+def _egcd(a: int, b: int):
+    if b == 0:
+        return (abs(a), 1 if a >= 0 else -1, 0)
+    g, x, y = _egcd(b, a % b)
+    return (g, y, x - (a // b) * y)
+
+def _inv_mod(a: int, m: int):
+    a %= m
+    g, x, _ = _egcd(a, m)
+    if g != 1:
+        return None
+    return x % m
+
+def _crt2(a: int, m: int, b: int, n: int):
+    # solve x≡a (mod m), x≡b (mod n); return smallest nonnegative or None if inconsistent
+    if m == 0 or n == 0:
+        return None
+    m = abs(int(m)); n = abs(int(n))
+    a %= m; b %= n
+    from math import gcd
+    g = gcd(m, n)
+    if (b - a) % g != 0:
+        return None
+    m1 = m // g
+    n1 = n // g
+    rhs = (b - a) // g
+    inv = _inv_mod(m1, n1)
+    if inv is None:
+        return None
+    t = (rhs * inv) % n1
+    x = a + m * t
+    l = m * n1
+    return x % l
+
+def _handle_crt(s: str):
+    # accept "≡", mojibake "â‰¡", or plain "="
+    s2 = s.replace("â‰¡", "≡")
+    pat = re.compile(r'x\s*(?:≡|=)\s*([+-]?\d+)\s*\(mod\s*([+-]?\d+)\)', re.IGNORECASE)
+    hits = pat.findall(s2)
+    if len(hits) >= 2:
+        a, m = int(hits[0][0]), int(hits[0][1])
+        b, n = int(hits[1][0]), int(hits[1][1])
+        ans = _crt2(a, m, b, n)
+        if ans is not None:
+            return str(ans)
+    return None
+# === AUREON_CRT_END ===
+
 class Solver:
     def solve(self, prompt: str) -> str:
         s = _norm(prompt)

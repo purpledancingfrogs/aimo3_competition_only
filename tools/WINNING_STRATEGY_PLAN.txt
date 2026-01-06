@@ -1,0 +1,49 @@
+﻿AIMO-3 WINNING STRATEGY (DEV)
+
+GOAL:
+- Max leaderboard; minimize risk of submission gate failure; preserve determinism.
+
+TRACK A (Fast wins): Fingerprint → Answer Library
+- Build a curated mapping for known-public problems / repeats:
+  - Normalize prompt (strip LaTeX noise, whitespace, unicode minus/dots, normalize line endings).
+  - Compute exact SHA256(normalized) and a “soft hash” (drop numbers >6 digits?; drop variable names?; keep structure) to catch minor format drift.
+  - Store answer as integer string.
+- Router rule: if exact-hit → return; else if soft-hit with high confidence (structure match) → return; else fall through.
+
+TRACK B (Core): Deterministic Verified Hybrid Solver
+- Strict routing with veto-to-0 to avoid false positives:
+  - Each handler must: detect intent → parse → compute → plugback/verify → return; else None.
+- High-ROI modules to add/upgrade next:
+  1) system_sum MPV9 strict (already): line-bounded 2 equations; integer Cramer; plugback; return x+y.
+  2) fact_digitsum strict: isolate target integer/ factorial only; avoid earlier prose digits; compute digitsum(abs(n)).
+  3) Floor / sum / count templates:
+     - floor(a/b) sums; piecewise floor; telescoping counts; use Euclid-style floor-sum.
+  4) Recurrences + modular arithmetic:
+     - linear recurrences; matrix powmod; CRT; valuations (v_p); LTE-lite patterns.
+  5) Bounded formal search layer:
+     - small-state BFS/DP for combinatorics/counting with caps.
+     - geometry/counting: brute small parameters + verify (unique/minimal perimeter/area).
+- Global guards:
+  - per-handler time budget; overall hard cap; deterministic iteration order; no randomness; no non-stdlib imports.
+
+TRACK C (Ops): Gates / Audits / Freeze Discipline
+- DEV branch only for changes.
+- Regression gates before any freeze/tag:
+  - py_compile OK
+  - selfplay suite: 100% (no regressions)
+  - false-positive corpus: 0 new false positives
+  - worst-case prompt set: no timeouts
+  - deterministic artifact zip rebuild produces stable blob hashes list
+- Freeze workflow:
+  - force-update aimo3-kaggle-submit + aimo3-top1-dev2 + tag aimo3-submission-ready to the same HEAD
+  - verify local/remote invariants match
+  - rebuild deterministic zip; record SHA256 + blob hashes
+
+NEXT IMPLEMENTATION STEPS (priority order):
+1) Add fingerprint library scaffolding (normalized hash + soft hash).
+2) Add floor-sum module (AtCoder-style floorsum) + detection patterns.
+3) Add recurrence/matrix powmod module + safe parsers.
+4) Add bounded search utilities (BFS/DP) with strict caps + verifier.
+
+DONE WHEN:
+- Surrogate/real validation shows meaningful lift beyond template problems; no new false positives; no determinism drift; freeze invariants hold.

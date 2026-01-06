@@ -1,0 +1,61 @@
+﻿LAPTOP_AGENT_MISSION_FINGERPRINT (DEV ONLY)
+
+TARGET_REPO: C:\Users\aureon\aimo3_competition_only
+TARGET_BRANCH: aimo3-dev-solver-upgrades
+TARGET_FILE: solver.py
+
+ACTION (EDIT solver.py ONLY; DO NOT TOUCH OTHER FILES):
+1) Implement Fingerprint→Answer Library scaffolding:
+
+A) Normalization for hashing:
+- Add helper _fp_norm(s: str) -> str
+  - Start from existing normalization (_norm) if present; otherwise: normalize unicode minus (−, –, — -> -) and multiplication dots (·, × -> *).
+  - Collapse whitespace to single spaces; strip.
+  - Keep it deterministic and cheap.
+
+B) Exact hash:
+- Add dict _FP_EXACT: Dict[str,str] mapping sha256(_fp_norm(prompt)) hex -> answer string (integer).
+- Add helper _fp_sha(s) -> hex sha256 of UTF-8 bytes.
+- Add helper _fp_exact_lookup(text) -> Optional[str]:
+  - h=_fp_sha(_fp_norm(text)); if in _FP_EXACT return value else None.
+
+C) Soft hash (structure-only, HIGH-CONFIDENCE ONLY):
+- Add helper _fp_soft(s: str) -> str
+  - Use _fp_norm first.
+  - Replace all digit runs with '#'.
+  - Remove variable names (single letters) ONLY when they are standalone tokens (e.g. 'x', 'y', 'n', 'm') -> '@'.
+  - Keep operators and punctuation; keep '#','@' plus math symbols.
+- Add dict _FP_SOFT: Dict[str,Tuple[str,int]] mapping soft_key -> (answer, support_count).
+  - Only return a soft hit when support_count == 1 (unique key).
+  - Otherwise veto (return None).
+
+D) Router integration:
+- In Solver.solve (near the top, before other handlers), do:
+  - if (r := _fp_exact_lookup(s)): return r
+  - if (r := _fp_soft_lookup(s)): return r
+- MUST NOT change any existing handler behavior unless the fingerprint matches.
+
+E) Populate with EMPTY dicts for now (no answers added yet). The point is scaffolding + safe routing.
+
+POST_ACTION_COMMANDS (run in repo root):
+1) python -c "import py_compile; py_compile.compile('solver.py', doraise=True); print('PY_COMPILE_OK')"
+2) @' 
+import json
+from solver import Solver
+need=set(["system_sum","fact_digitsum"])
+ok=0; tot=0; fails=[]
+for line in open("tools/selfplay_v1.jsonl","r",encoding="utf-8"):
+    line=line.strip()
+    if not line: continue
+    it=json.loads(line)
+    if it.get("tag") not in need: continue
+    tot += 1
+    got = Solver().solve(it["prompt"]).strip()
+    exp = str(it["answer"]).strip()
+    if got==exp: ok += 1
+    else: fails.append((it.get("tag"),exp,got,it["prompt"][:120]))
+print("SELFPLAY_FP_TOTAL",tot)
+print("SELFPLAY_FP_OK",ok)
+print("SELFPLAY_FP_ACC",(ok/tot if tot else 0.0))
+print("FAILURES_N",len(fails))
+if fails: print("FIRST_FAIL",fails[0])

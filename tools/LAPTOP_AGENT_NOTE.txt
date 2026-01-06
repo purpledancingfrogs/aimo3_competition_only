@@ -1,0 +1,4 @@
+﻿LAPTOP_AGENT_NOTE
+LOCAL_TIME=2026-01-06 09:44:16
+NOTE_PATH=C:\Users\aureon\aimo3_competition_only\tools\LAPTOP_AGENT_NOTE.txt
+
