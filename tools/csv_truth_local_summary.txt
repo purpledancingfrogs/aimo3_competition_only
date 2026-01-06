@@ -1,0 +1,5 @@
+csv=.\reference.csv
+rows=10
+ok=10
+acc=1.000000
+failures=0
