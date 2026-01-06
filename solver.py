@@ -648,9 +648,8 @@ def _norm_text(t: str) -> str:
 
 def _int_mod_1000(x: int) -> str:
     ### AUREON_NO_MOD1000_BEGIN ###
-return str(int(x))
-### AUREON_NO_MOD1000_END ###
-
+    return str(int(x))
+    ### AUREON_NO_MOD1000_END ###
 @_contextlib.contextmanager
 def _silence_stdio():
     buf = _io.StringIO()
@@ -906,17 +905,6 @@ def solve(problem_text: str) -> str:
     # OVERRIDE_RUNTIME_FIX_END
 
     t = _norm_text(problem_text)
-
-    ### AUREON_ANSWER_COLON_BEGIN ###
-
-    m_ans = re.search(r'(?is)\banswer\s*:\s*([-+]?\d+)\b', problem_text)
-
-    if m_ans:
-
-        return m_ans.group(1).strip()
-
-    ### AUREON_ANSWER_COLON_END ###
-
     if not t:
         return "0"
     # hard cap to prevent regex/sympy blowups
