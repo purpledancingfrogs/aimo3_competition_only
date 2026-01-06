@@ -15,7 +15,7 @@ def _aureon_sorted_glob(*args, **kwargs):
     import glob as _glob
     return sorted(__aureon_sorted_glob(*args, **kwargs))
 
-﻿# solver.py
+# solver.py
 import re
 import math
 from typing import Optional, Tuple, List
