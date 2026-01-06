@@ -1,0 +1,12 @@
+﻿{
+    "head":  "1ac91688b2fcfc1fe2f3277659069a68142a643b",
+    "zip_path":  "tools\\aimo3_submit_1ac9168.zip",
+    "zip_sha256":  "183DCE00522B2A8E322BDE2BC5BCDB4ADB4AE48FC9161B92C0EADCC914BBB32B",
+    "created_utc":  "2026-01-06T15:51:18.1401956Z",
+    "files":  [
+                  "solver.py",
+                  "requirements.txt",
+                  "kaggle_evaluation\\aimo_3_gateway.py",
+                  "kaggle_evaluation\\aimo_3_inference_server.py"
+              ]
+}
