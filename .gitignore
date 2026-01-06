@@ -40,3 +40,6 @@ AIMO3_SUBMISSION.zip
 audit/*.zip
 kaggle_kernel_src/
 **pycache**/
+tools/_outputs/
+tools/csv_truth_*
+tools/backup_solver_*.py
