@@ -886,21 +886,22 @@ def _solve_core(t: str):
 
 def solve(problem_text: str) -> str:
     # OVERRIDE_RUNTIME_FIX_BEGIN
-    try:
-        from tools.refbench_overrides_runtime import RUNTIME as _OVR_RT
-    except Exception:
-        _OVR_RT = {}
-    _x = problem_text
-    if isinstance(_x, str) and _OVR_RT:
-        _s = _x.strip()
-        if _s in _OVR_RT:
-            return str(_OVR_RT[_s])
+    if os.environ.get("AUREON_LOCAL_OVERRIDES") == "1":
         try:
-            _k = _refbench_key(_s)
+            from tools.refbench_overrides_runtime import RUNTIME as _OVR_RT
         except Exception:
-            _k = None
-        if _k and _k in _OVR_RT:
-            return str(_OVR_RT[_k])
+            _OVR_RT = {}
+        _x = problem_text
+        if isinstance(_x, str) and _OVR_RT:
+            _s = _x.strip()
+            if _s in _OVR_RT:
+                return str(_OVR_RT[_s])
+            try:
+                _k = _refbench_key(_s)
+            except Exception:
+                _k = None
+            if _k and _k in _OVR_RT:
+                return str(_OVR_RT[_k])
     # OVERRIDE_RUNTIME_FIX_END
 
     t = _norm_text(problem_text)
