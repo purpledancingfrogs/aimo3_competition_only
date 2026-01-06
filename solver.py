@@ -1,5 +1,75 @@
 # AUREON_DETERMINISM_PATCH
 import os as _os
+
+### AUREON_SYS2X2_BEGIN ###
+def _sys2x2_coeffs(lhs: str):
+    # returns (a,b,const) for a*x + b*y + const
+    t = lhs.lower()
+    a = b = 0
+    for mm in re.finditer(r'([+\-]?\s*\d*)\s*\*?\s*([xy])\b', t):
+        raw = mm.group(1).replace(" ", "")
+        var = mm.group(2)
+        if raw in ("", "+", None):
+            c = 1
+        elif raw == "-":
+            c = -1
+        else:
+            try:
+                c = int(raw)
+            except Exception:
+                continue
+        if var == "x":
+            a += c
+        else:
+            b += c
+
+    # strip variable terms; remaining signed ints are constants
+    t2 = re.sub(r'([+\-]?\s*\d*)\s*\*?\s*[xy]\b', ' ', t)
+    const = 0
+    for mm in re.finditer(r'([+\-]?\s*\d+)', t2):
+        try:
+            const += int(mm.group(1).replace(" ", ""))
+        except Exception:
+            pass
+    return a, b, const
+
+def _handle_system_sum_2x2(text: str):
+    # Trigger only when explicitly asked for x+y (system_sum family)
+    if not re.search(r'(?is)\bx\s*\+\s*y\b', text):
+        return None
+
+    t = text.replace("\r", "\n")
+    # grab equation segments without spanning lines or multiple '='
+    eqs = []
+    for lhs, rhs in re.findall(r'([^\n=]*[xy][^\n=]*?)=\s*([-+]?\d+)', t, flags=re.I):
+        lhs = lhs.strip()
+        if not lhs:
+            continue
+        try:
+            r = int(rhs)
+        except Exception:
+            continue
+        a, b, c0 = _sys2x2_coeffs(lhs)
+        if a == 0 and b == 0:
+            continue
+        eqs.append((a, b, r - c0))
+
+    if len(eqs) < 2:
+        return None
+
+    (a,b,c),(d,e,f) = eqs[0], eqs[1]
+    det = a*e - b*d
+    if det == 0:
+        return None
+    x_num = c*e - b*f
+    y_num = a*f - c*d
+    if x_num % det != 0 or y_num % det != 0:
+        return None
+    x = x_num // det
+    y = y_num // det
+    return str(x + y)
+### AUREON_SYS2X2_END ###
+
 _os.environ.setdefault('PYTHONHASHSEED','0')
 import unicodedata as _unicodedata
 import re as _re
@@ -904,6 +974,17 @@ def solve(problem_text: str) -> str:
     # OVERRIDE_RUNTIME_FIX_END
 
     t = _norm_text(problem_text)
+
+
+    ### AUREON_SYS2X2_CALL_BEGIN ###
+
+    v = _handle_system_sum_2x2(problem_text)
+
+    if v is not None:
+
+        return v
+
+    ### AUREON_SYS2X2_CALL_END ###
 
     ### AUREON_ANSWER_COLON_BEGIN ###
 
