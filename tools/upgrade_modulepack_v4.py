@@ -1,291 +1,246 @@
-﻿# tools/upgrade_modulepack_v4.py
-# Bounded sympy-based equation/system handler + stronger normalization + safe injection into Solver.solve
-from __future__ import annotations
-import re, sys, pathlib
+﻿import re, math
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-SOLVER = ROOT / "solver.py"
+PATH="solver.py"
 
-def _find_solve_block(lines):
-    # find "class Solver" then first "def solve("
-    cls_i = None
-    for i,ln in enumerate(lines):
-        if re.match(r"^\s*class\s+Solver\b", ln):
-            cls_i = i
-            break
-    if cls_i is None:
-        return None
-    for j in range(cls_i+1, len(lines)):
-        if re.match(r"^\s*def\s+solve\s*\(", lines[j]):
-            return j
-    return None
-
-def _inject_into_solve(lines, solve_i):
-    indent = re.match(r"^(\s*)def\s+solve\s*\(", lines[solve_i]).group(1) + "    "
-    # move past optional docstring if present
-    k = solve_i + 1
-    while k < len(lines) and lines[k].strip() == "":
-        k += 1
-    if k < len(lines) and re.match(r'^\s*("""|''') , lines[k]):
-        q = lines[k].lstrip()[:3]
-        k += 1
-        while k < len(lines) and q not in lines[k]:
-            k += 1
-        if k < len(lines):
-            k += 1
-    inject = [
-        f"{indent}# MODULEPACK_V4_INJECT\n",
-        f"{indent}try:\n",
-        f"{indent}    _r = _mpv4_try(prompt)\n",
-        f"{indent}    if _r is not None:\n",
-        f"{indent}        return _r\n",
-        f"{indent}except Exception:\n",
-        f"{indent}    pass\n",
-        "\n"
-    ]
-    return lines[:k] + inject + lines[k:]
-
-def patch():
-    txt = SOLVER.read_text(encoding="utf-8")
-    if "MODULEPACK_V4" in txt:
+def _append_patch(src: str) -> str:
+    if "MPV4_PATCH_BEGIN" in src:
         print("ALREADY_PATCHED")
-        return 0
-    lines = txt.splitlines(True)
+        return src
 
-    solve_i = _find_solve_block(lines)
-    if solve_i is None:
-        print("ERROR: could not locate Solver.solve()")
-        return 2
+    patch = r'''
 
-    # helper code inserted near top (after imports) to avoid forward refs
-    helper = r'''
-# =========================
-# MODULEPACK_V4 (bounded)
-# =========================
-import math as _mpv4_math
-import re as _mpv4_re
+# === MPV4_PATCH_BEGIN ===
+import re as _re
+import math as _math
+
+# fast guards
+_mpv4_allowed = set("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+-*/^()= \n\r\t.,:;_[]{}<>≡∈|&!?'\"")
+def _mpv4_chars_ok(s: str) -> bool:
+    # allow common unicode symbols we normalize away
+    for ch in s:
+        if ch in _mpv4_allowed: 
+            continue
+        o = ord(ch)
+        if o in (0x2261, 0x2260, 0x00D7, 0x2212, 0x03C0):  # ≡ ≠ × − π
+            continue
+        # allow basic unicode spaces
+        if ch.isspace():
+            continue
+        return False
+    return True
 
 def _mpv4_norm(s: str) -> str:
-    if not isinstance(s, str):
-        s = str(s)
-    s = s.replace("\u2212", "-").replace("\u2013", "-").replace("\u2014", "-")
-    s = s.replace("\u00d7", "*").replace("\u22c5", "*").replace("\u00f7", "/")
-    s = s.replace("\u2261", "≡")
-    s = s.replace("\u00b2", "^2").replace("\u00b3", "^3")
-    s = s.replace("\u2074", "^4").replace("\u2075", "^5").replace("\u2076", "^6").replace("\u2077", "^7").replace("\u2078", "^8").replace("\u2079", "^9")
-    s = s.replace("\u00a0", " ")
-    s = _mpv4_re.sub(r"[ \t]+", " ", s)
-    return s.strip()
+    s = s.replace("×","*").replace("−","-").replace("^","**")
+    # keep "mod" readable
+    return s
 
-def _mpv4_int(x):
-    try:
-        if isinstance(x, bool):
-            return None
-        if isinstance(x, int):
-            return int(x)
-        if hasattr(x, "is_integer") and x.is_integer():
-            return int(x)
-        if hasattr(x, "is_Integer") and bool(x.is_Integer):
-            return int(x)
-    except Exception:
+_mpv4_re_fact_digitsum = _re.compile(r"(?:sum of digits of)\s+(\d{1,6})\s*!\s*", _re.I)
+_mpv4_re_powmod_1 = _re.compile(r"\b(\d{1,9})\s*(?:\*\*|\^)\s*(\d{1,9})\s*(?:mod|%|modulo)\s*(\d{1,9})\b", _re.I)
+_mpv4_re_powmod_2 = _re.compile(r"\b(?:powmod|power mod|compute)\s+(\d{1,9})\s*(?:\*\*|\^)\s*(\d{1,9})\s*(?:mod|%|modulo)\s*(\d{1,9})\b", _re.I)
+_mpv4_re_mod_simple = _re.compile(r"\b(\d{1,18})\s*(?:mod|%|modulo)\s*(\d{1,9})\b", _re.I)
+
+_mpv4_re_cong_1 = _re.compile(r"(?:≡|=)\s*(-?\d{1,18})\s*\(\s*mod\s*(\d{1,18})\s*\)", _re.I)
+_mpv4_re_cong_2 = _re.compile(r"(?:mod\s*(\d{1,18})\s*:\s*)(-?\d{1,18})", _re.I)
+
+def _egcd(a:int,b:int):
+    x0,y0,x1,y1=1,0,0,1
+    while b:
+        q=a//b
+        a,b=b,a-q*b
+        x0,x1=x1,x0-q*x1
+        y0,y1=y1,y0-q*y1
+    return a,x0,y0
+
+def _crt_pair(a1:int,m1:int,a2:int,m2:int):
+    # solve x=a1 mod m1, x=a2 mod m2 (possibly non-coprime)
+    g,p,q=_egcd(m1,m2)
+    if (a2-a1)%g!=0:
         return None
-    return None
+    l = (m1//g)*m2
+    t = ((a2-a1)//g) * p
+    x = (a1 + m1*t) % l
+    return x, l
 
-def _mpv4_pick_expr(prompt: str):
-    p = prompt.lower()
-    if "x+y" in p or "x + y" in p: return ("x","y","+")
-    if "x-y" in p or "x - y" in p: return ("x","y","-")
-    if "x*y" in p or "x * y" in p or "xy" in p: return ("x","y","*")
-    if "return x" in p and "return x+" not in p and "return x-" not in p: return ("x",None,None)
-    if "return y" in p: return ("y",None,None)
-    if "value of x" in p: return ("x",None,None)
-    if "value of y" in p: return ("y",None,None)
-    return None
+def _crt_all(pairs):
+    x,m = pairs[0]
+    x%=m
+    for a2,m2 in pairs[1:]:
+        a2%=m2
+        r=_crt_pair(x,m,a2,m2)
+        if r is None:
+            return None
+        x,m=r
+    return x%m
 
-def _mpv4_try_sympy(prompt: str):
-    # bounded sympy: only for small systems/equations explicitly present
+def _mpv4_try_sympy_system(text: str):
     try:
         import sympy as sp
     except Exception:
         return None
-    s0 = _mpv4_norm(prompt)
-    s = s0
-    s = s.replace("^", "**")
-    # quick handlers first (powmod/mod)
-    m = _mpv4_re.search(r"compute\s+(\d+)\s*\*\*\s*(\d+)\s+mod\s+(\d+)", s.lower())
-    if m:
-        a=int(m.group(1)); b=int(m.group(2)); md=int(m.group(3))
-        return str(pow(a,b,md))
-    m = _mpv4_re.search(r"(\d+)\s*mod\s*(\d+)", s.lower())
-    if m and "pow" not in s.lower() and "**" not in s:
-        a=int(m.group(1)); md=int(m.group(2))
-        return str(a % md)
 
-    # factorial digit sum
-    m = _mpv4_re.search(r"sum of digits of\s+(\d+)\s*!", s.lower())
-    if m:
-        n=int(m.group(1))
-        if 0 <= n <= 3000:
-            f=_mpv4_math.factorial(n)
-            return str(sum(int(ch) for ch in str(f)))
-
-    # gcd/lcm
-    m = _mpv4_re.search(r"gcd\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)", s.lower())
-    if m:
-        a=int(m.group(1)); b=int(m.group(2))
-        return str(_mpv4_math.gcd(a,b))
-    m = _mpv4_re.search(r"lcm\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)", s.lower())
-    if m:
-        a=int(m.group(1)); b=int(m.group(2))
-        g=_mpv4_math.gcd(a,b)
-        return str(abs(a//g*b) if g else 0)
-
-    # binomial
-    m = _mpv4_re.search(r"(?:c|choose)\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)", s.lower())
-    if m:
-        n=int(m.group(1)); k=int(m.group(2))
-        if 0 <= k <= n <= 20000 and k <= 2000:
-            return str(_mpv4_math.comb(n,k))
-
-    # CRT two congruences: x ≡ a (mod m) and x ≡ b (mod n)
-    if "≡" in s0 and "mod" in s.lower():
-        mm = _mpv4_re.findall(r"≡\s*(-?\d+)\s*\(mod\s*(\d+)\)", s0)
-        if len(mm) >= 2:
-            a1,m1 = int(mm[0][0]), int(mm[0][1])
-            a2,m2 = int(mm[1][0]), int(mm[1][1])
-            def egcd(a,b):
-                if b==0: return (a,1,0)
-                g,x,y=egcd(b,a%b)
-                return (g,y,x-(a//b)*y)
-            g,x,y = egcd(m1,m2)
-            if (a2-a1) % g == 0:
-                l = m1//g*m2
-                k = ((a2-a1)//g * x) % (m2//g)
-                sol = (a1 + k*m1) % l
-                if "smallest" in s.lower() or "nonnegative" in s.lower():
-                    return str(sol)
-                return str(sol)
-
-    # Extract equation lines with '='
-    eq_lines = []
-    for ln in s0.splitlines():
-        if "=" in ln and any(ch.isalpha() for ch in ln):
-            eq_lines.append(ln.strip())
-    if not eq_lines and "=" in s0 and any(ch.isalpha() for ch in s0):
-        # single-line prompt
-        if s0.count("=") <= 3:
-            eq_lines = [x.strip() for x in s0.split("\n") if "=" in x]
-
-    if not eq_lines:
+    if not _mpv4_chars_ok(text):
         return None
 
-    # build symbols set (limit)
-    sym_names = sorted(set(_mpv4_re.findall(r"\b[a-zA-Z]\b", " ".join(eq_lines))))
-    sym_names = [x for x in sym_names if x.lower() not in ("e", "i")]
-    if not sym_names:
-        sym_names = ["x"]
-    if len(sym_names) > 3:
-        sym_names = sym_names[:3]
-    syms = {name: sp.Symbol(name, integer=True) for name in sym_names}
+    t = _mpv4_norm(text)
 
-    eqs = []
-    for ln in eq_lines[:6]:
-        parts = ln.split("=")
-        if len(parts) != 2:
+    # collect equation-like parts
+    eqs=[]
+    # split into candidate lines/chunks
+    chunks = re.split(r"[\n;]+", t)
+    for ch in chunks:
+        if "=" not in ch:
             continue
-        L,R = parts
-        try:
-            Ls = sp.sympify(L.replace("^","**"), locals=syms)
-            Rs = sp.sympify(R.replace("^","**"), locals=syms)
-            eqs.append(sp.Eq(Ls, Rs))
-        except Exception:
+        # keep only simple equation characters
+        if not re.fullmatch(r"[0-9a-zA-Z+\-*/().=\s]+", ch):
             continue
-
+        # one '=' only
+        if ch.count("=")!=1:
+            continue
+        L,R = ch.split("=")
+        L=L.strip(); R=R.strip()
+        if not L or not R:
+            continue
+        eqs.append((L,R))
     if not eqs:
         return None
 
-    vars_ = [syms[n] for n in sym_names]
+    # variables: prefer x,y,z,a,b,c
+    vars=set()
+    for L,R in eqs:
+        for v in ("x","y","z","a","b","c","n","m","k"):
+            if re.search(rf"\b{v}\b", L) or re.search(rf"\b{v}\b", R):
+                vars.add(v)
+    if not vars or len(vars)>3:
+        return None
 
-    # solve system/equation; bounded
+    syms = {v: sp.Symbol(v, integer=True) for v in vars}
+    equations=[]
+    for L,R in eqs[:5]:
+        try:
+            l = sp.sympify(L, locals=syms)
+            r = sp.sympify(R, locals=syms)
+            equations.append(sp.Eq(l,r))
+        except Exception:
+            return None
+
     try:
-        sol = sp.solve(eqs, vars_, dict=True)
+        sol = sp.linsolve(equations, [syms[v] for v in sorted(vars)])
     except Exception:
         return None
     if not sol:
         return None
-    sol = sol[0]
-    # require all vars in solution to be integer-like
-    vals = {}
-    for v in vars_:
-        if v not in sol:
-            continue
-        iv = _mpv4_int(sol[v])
-        if iv is None:
-            # allow rational exact integers
-            try:
-                if sol[v].is_Rational and sol[v].q == 1:
-                    iv = int(sol[v])
-                else:
-                    return None
-            except Exception:
-                return None
-        vals[str(v)] = int(iv)
-
-    if not vals:
+    sol_list=list(sol)
+    if not sol_list:
+        return None
+    tup=sol_list[0]
+    if len(tup)!=len(vars):
         return None
 
-    pick = _mpv4_pick_expr(prompt)
-    if pick:
-        a,b,op = pick
-        if b is None:
-            if a in vals:
-                return str(vals[a])
-            return None
-        if a in vals and b in vals:
-            if op == "+": return str(vals[a] + vals[b])
-            if op == "-": return str(vals[a] - vals[b])
-            if op == "*": return str(vals[a] * vals[b])
-    # default: single variable x if available
-    if "x" in vals:
-        return str(vals["x"])
-    # else first value
-    return str(next(iter(vals.values())))
+    assign = {sorted(vars)[i]: tup[i] for i in range(len(vars))}
 
-def _mpv4_try(prompt: str):
-    # returns string integer or None
-    out = _mpv4_try_sympy(prompt)
-    if out is None:
-        return None
-    out = str(out).strip()
-    if not out:
-        return None
-    # enforce plain int string
-    if _mpv4_re.fullmatch(r"[-+]?\d+", out):
-        return out
+    # if question asks for sum/expression like x+y or x+y+z
+    m = re.search(r"\b(?:find|compute)\b[^.\n]*\b([xyzabc](?:\s*[\+\-]\s*[xyzabc]){1,4})\b", t, re.I)
+    if m:
+        expr_str = m.group(1).replace(" ", "")
+        try:
+            expr = sp.sympify(expr_str, locals=syms)
+            val = expr.subs({syms[k]: assign[k] for k in assign})
+            val = sp.nsimplify(val)
+            if val.is_integer:
+                return str(int(val))
+        except Exception:
+            pass
+
+    # else if single variable requested
+    m2 = re.search(r"\b(?:find|solve for)\b[^.\n]*\b([xyzabc])\b", t, re.I)
+    if m2:
+        v=m2.group(1)
+        if v in assign:
+            val = sp.nsimplify(assign[v])
+            if val.is_integer:
+                return str(int(val))
+
     return None
-# =========================
-# END MODULEPACK_V4
-# =========================
+
+def _mpv4_solve(text: str):
+    if not text:
+        return None
+    t = text.strip()
+    if not t:
+        return None
+    if len(t) > 20000:
+        return None
+
+    # factorial digit sum
+    m = _mpv4_re_fact_digitsum.search(t)
+    if m:
+        n = int(m.group(1))
+        if 0 <= n <= 50000:  # safe big-int bound
+            f = _math.factorial(n)
+            return str(sum((ord(c)-48) for c in str(f)))
+
+    # powmod
+    for rr in (_mpv4_re_powmod_1, _mpv4_re_powmod_2):
+        m = rr.search(t)
+        if m:
+            a=int(m.group(1)); b=int(m.group(2)); mod=int(m.group(3))
+            if mod != 0:
+                return str(pow(a,b,mod))
+
+    # simple mod
+    m = _mpv4_re_mod_simple.search(t)
+    if m:
+        a=int(m.group(1)); mod=int(m.group(2))
+        if mod != 0:
+            return str(a % mod)
+
+    # CRT: grab congruences
+    pairs=[]
+    for a,mn in _mpv4_re_cong_1.findall(t):
+        aa=int(a); mm=int(mn)
+        if mm != 0:
+            pairs.append((aa, abs(mm)))
+    if len(pairs) < 2:
+        # alt "mod m: a" format
+        for mn,a in _mpv4_re_cong_2.findall(t):
+            aa=int(a); mm=int(mn)
+            if mm != 0:
+                pairs.append((aa, abs(mm)))
+
+    if len(pairs) >= 2 and len(pairs) <= 6:
+        r = _crt_all(pairs)
+        if r is not None:
+            return str(int(r))
+
+    # sympy bounded system/equation solver (linear-ish)
+    r = _mpv4_try_sympy_system(t)
+    if r is not None:
+        return r
+
+    return None
+
+# monkeypatch Solver.solve to try MPV4 first, then original
+try:
+    _MPV4_SOLVE0 = Solver.solve
+    def _mpv4_solve_wrap(self, text):
+        ans = _mpv4_solve(text)
+        if ans is not None:
+            return ans
+        return _MPV4_SOLVE0(self, text)
+    Solver.solve = _mpv4_solve_wrap
+except Exception:
+    pass
+# === MPV4_PATCH_END ===
 '''
-    # place helper after initial imports block (best-effort)
-    insert_at = 0
-    for i,ln in enumerate(lines[:200]):
-        if ln.startswith("class ") or re.match(r"^\s*class\s+", ln):
-            insert_at = i
-            break
-    # ensure helper inserted before class Solver
-    lines = lines[:insert_at] + [helper] + lines[insert_at:]
+    return src + patch
 
-    # recompute solve index after insertion
-    solve_i = _find_solve_block(lines)
-    if solve_i is None:
-        print("ERROR: solve not found after insertion")
-        return 3
-    lines = _inject_into_solve(lines, solve_i)
-
-    SOLVER.write_text("".join(lines), encoding="utf-8")
-    print("PATCHED")
-    return 0
+def main():
+    with open(PATH, "r", encoding="utf-8") as f:
+        src = f.read()
+    out = _append_patch(src)
+    with open(PATH, "w", encoding="utf-8", newline="\n") as f:
+        f.write(out)
+    print("PATCHED_MPV4")
 
 if __name__ == "__main__":
-    raise SystemExit(patch())
+    main()
