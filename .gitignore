@@ -51,3 +51,8 @@ tools/*_failures.jsonl
 tools/*_report.json
 tools/.pytest_cache/
 tools/__pycache__/
+
+# selfplay
+tools/selfplay_v1.jsonl
+tools/selfplay_failures_v1.json
+
