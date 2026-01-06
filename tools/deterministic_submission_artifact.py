@@ -25,7 +25,9 @@ def write_blob_hashes(out_path: str) -> None:
     f.write("\n".join(lines) + "\n")
 
 def build_deterministic_zip(zip_out: str) -> None:
-  os.makedirs(os.path.dirname(zip_out), exist_ok=True)
+  out_dir = os.path.dirname(zip_out)
+  if out_dir:
+    os.makedirs(out_dir, exist_ok=True)
   with zipfile.ZipFile(zip_out, "w", compression=zipfile.ZIP_STORED, allowZip64=True) as z:
     for p in FILES:
       arc = p.replace("\\", "/")
