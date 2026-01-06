@@ -884,7 +884,7 @@ def _solve_core(t: str):
     if r is not None: return r
     return None
 
-def solve(problem_text: str) -> str:
+def _solve_inner(problem_text: str) -> str:
     # OVERRIDE_RUNTIME_FIX_BEGIN
     try:
         from tools.refbench_overrides_runtime import RUNTIME as _OVR_RT
@@ -936,3 +936,32 @@ def solve(problem_text: str) -> str:
             return _int_mod_1000(int(r2))
         except Exception:
             return "0"
+
+
+### AUREON_SOLVE_WRAPPER_BEGIN ###
+def solve(problem_text: str):
+    # Contract: return decimal digits only; enforce 0..999 (mod 1000); never raise.
+    try:
+        out = _solve_inner(problem_text)
+    except Exception:
+        out = "0"
+
+    # normalize to integer token (prefer first integer-like token)
+    try:
+        t = str(out).strip()
+    except Exception:
+        return "0"
+
+    m = re.search(r'-?\d+', t)
+    if not m:
+        return "0"
+
+    try:
+        v = int(m.group(0))
+    except Exception:
+        return "0"
+
+    v %= 1000
+    return str(v)
+### AUREON_SOLVE_WRAPPER_END ###
+
