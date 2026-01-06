@@ -1,4 +1,4 @@
-﻿# solver.py
+# solver.py
 import re
 import math
 from typing import Optional, Tuple, List
