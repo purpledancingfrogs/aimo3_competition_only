@@ -3,6 +3,60 @@ import os as _os
 
 
 ### AUREON_CRT2_BEGIN ###
+
+# --- CRT(2) micro-solver (unicode ? supported) ---
+_CRT2_RE = re.compile(r"x\s*(?:?|=)\s*([+-]?\d+)\s*\(\s*mod\s*(\d+)\s*\)", re.IGNORECASE)
+
+def _egcd(a:int,b:int):
+    a=int(a); b=int(b)
+    x0,y0,x1,y1 = 1,0,0,1
+    while b:
+        q = a//b
+        a,b = b, a-q*b
+        x0,x1 = x1, x0-q*x1
+        y0,y1 = y1, y0-q*y1
+    return a,x0,y0
+
+def _invmod(a:int,m:int):
+    g,x,_y = _egcd(a,m)
+    if g != 1:
+        return None
+    return x % m
+
+def _crt_pair(a1:int,m1:int,a2:int,m2:int):
+    a1%=m1; a2%=m2
+    g,x,y = _egcd(m1,m2)
+    # inconsistent if not congruent mod gcd
+    if (a2 - a1) % g != 0:
+        return None
+    lcm = (m1//g)*m2
+    # solve m1*t ? (a2-a1) (mod m2)
+    m1g = m1//g
+    m2g = m2//g
+    rhs = (a2 - a1)//g
+    inv = _invmod(m1g % m2g, m2g)
+    if inv is None:
+        return None
+    t = (rhs % m2g) * inv % m2g
+    x0 = (a1 + m1*t) % lcm
+    return x0
+
+def _crt2_from_text(text:str):
+    if not isinstance(text,str) or not text:
+        return None
+    # normalize to catch both ? and =
+    t = text
+    # pick first two congruences
+    ms = _CRT2_RE.findall(t)
+    if len(ms) < 2:
+        return None
+    a1,m1 = int(ms[0][0]), int(ms[0][1])
+    a2,m2 = int(ms[1][0]), int(ms[1][1])
+    if m1 <= 0 or m2 <= 0:
+        return None
+    return _crt_pair(a1,m1,a2,m2)
+# --- end CRT(2) ---
+
 def _aureon_egcd(a: int, b: int):
     a = int(a); b = int(b)
     x0, y0, x1, y1 = 1, 0, 0, 1
@@ -962,6 +1016,9 @@ def _solve_core(t: str):
     return None
 
 def solve(problem_text: str) -> str:
+    _a = _crt2_from_text(problem_text)
+    if _a is not None:
+        return str(int(_a) % 1000)
     # OVERRIDE_RUNTIME_FIX_BEGIN
     try:
         from tools.refbench_overrides_runtime import RUNTIME as _OVR_RT
