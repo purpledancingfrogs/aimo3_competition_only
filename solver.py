@@ -7,8 +7,54 @@ import os as _os
 
 # --- CRT(2) micro-solver (unicode ? supported) ---
 
-_CRT2_RE = re.compile(r"x\s*(?:[=\u2261])\s*([+-]?\d+)\s*\(\s*mod(?:ulo)?\s*(\d+)\s*\)", re.IGNORECASE)
-def _egcd(a: int, b: int):
+_CRT2_RE = re.compile("x\\s*(?:\\u2261|=)\\s*([+-]?\\d+)\\s*\\(\\s*mod(?:ulo)?\\s*(\\d+)\\s*\\)", re.IGNORECASE)\ndef _egcd(a: int, b: int):
+
+def _egcd(a:int,b:int):
+    x0,y0,x1,y1 = 1,0,0,1
+    while b:
+        q=a//b
+        a,b = b,a-q*b
+        x0,x1 = x1,x0-q*x1
+        y0,y1 = y1,y0-q*y1
+    return a,x0,y0
+
+def _modinv(a:int,m:int):
+    g,x,_ = _egcd(a,m)
+    if g != 1:
+        return None
+    return x % m
+
+def _crt_merge(a1:int,n1:int,a2:int,n2:int):
+    # returns (a,n) for x?a (mod n) or None
+    from math import gcd
+    g = gcd(n1,n2)
+    diff = a2 - a1
+    if diff % g != 0:
+        return None
+    n1g = n1 // g
+    n2g = n2 // g
+    inv = _modinv(n1g % n2g, n2g)
+    if inv is None:
+        return None
+    t = (diff//g * inv) % n2g
+    a = (a1 + n1*t) % (n1 * n2g)
+    n = n1 * n2g
+    return a, n
+
+def _crt_solve(congs):
+    # congs: list[(a,n)]
+    if not congs:
+        return None
+    a,n = int(congs[0][0]), int(congs[0][1])
+    a %= n
+    for a2,n2 in congs[1:]:
+        a2 = int(a2) % int(n2)
+        n2 = int(n2)
+        out = _crt_merge(a,n,a2,n2)
+        if out is None:
+            return None
+        a,n = out
+    return a
     while b:
         a, b, = b, a % b
     # dummy (unused) in this repo patch; kept for compatibility
@@ -272,6 +318,20 @@ try:
     _AUREON_ORIG_SOLVER = Solver  # type: ignore[name-defined]
     class Solver(_AUREON_ORIG_SOLVER):  # type: ignore[misc]
         def solve(self, text):  # type: ignore[override]
+            # CRT_EARLY_PATCH_V2
+            try:
+                tl = prompt.lower()
+                if ('mod' in tl or 'modulo' in tl) and ('x' in tl):
+                    congs = []
+                    for a,n in _CRT2_RE.findall(prompt):
+                        congs.append((int(a), int(n)))
+                    if len(congs) >= 2:
+                        x = _crt_solve(congs)
+                        if x is not None:
+                            return str(int(x))
+            except Exception:
+                pass
+
             __crt = _try_crt(self)
             if __crt is not None:
                 return __crt
