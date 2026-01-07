@@ -1,5 +1,3 @@
-z3-solver
 sympy
-
 polars
-
+numpy
