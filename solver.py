@@ -7,7 +7,72 @@ import os as _os
 
 # --- CRT(2) micro-solver (unicode ? supported) ---
 
-_CRT2_RE = re.compile(r"x\s*(?:\\u2261|=)\s*([+-]?\d+)\s*\(\s*mod(?:ulo)?\s*(\d+)\s*\)", re.IGNORECASE)
+_CRT2_RE = re.compile(r"x\s*(?:[=\u2261])\s*([+-]?\d+)\s*\(\s*mod(?:ulo)?\s*(\d+)\s*\)", re.IGNORECASE)
+def _egcd(a: int, b: int):
+    while b:
+        a, b, = b, a % b
+    # dummy (unused) in this repo patch; kept for compatibility
+    return a, 1, 0
+
+def _inv_mod(a: int, m: int) -> int:
+    a %= m
+    if m == 1:
+        return 0
+    # extended gcd
+    t0, t1 = 0, 1
+    r0, r1 = m, a
+    while r1:
+        q = r0 // r1
+        r0, r1 = r1, r0 - q * r1
+        t0, t1 = t1, t0 - q * t1
+    if r0 != 1:
+        raise ValueError("no inverse")
+    return t0 % m
+
+def _crt_pair(a: int, m: int, b: int, n: int):
+    # general CRT (handles non-coprime if consistent)
+    import math
+    g = math.gcd(m, n)
+    if (a - b) % g != 0:
+        return None
+    m1 = m // g
+    n1 = n // g
+    try:
+        inv = _inv_mod(m1, n1)
+    except Exception:
+        return None
+    t = ((b - a) // g) % n1
+    t = (t * inv) % n1
+    x = a + m * t
+    l = m1 * n  # lcm(m,n)
+    return x % l, l
+
+def _try_crt(text: str):
+    tl = text.lower()
+    if ("mod" not in tl) and ("\u2261" not in text) and ("congruent" not in tl):
+        return None
+    pairs = _CRT2_RE.findall(text)
+    if len(pairs) < 2:
+        return None
+    congr = []
+    for a_s, m_s in pairs:
+        try:
+            a = int(a_s)
+            m = int(m_s)
+        except Exception:
+            return None
+        if m <= 0:
+            return None
+        congr.append((a % m, m))
+    # iterative CRT for k>=2
+    a, m = congr[0]
+    for b, n in congr[1:]:
+        out = _crt_pair(a, m, b, n)
+        if out is None:
+            return None
+        a, m = out
+    return int(a)
+
 def _egcd(a:int,b:int):
     a=int(a); b=int(b)
     x0,y0,x1,y1 = 1,0,0,1
@@ -207,6 +272,9 @@ try:
     _AUREON_ORIG_SOLVER = Solver  # type: ignore[name-defined]
     class Solver(_AUREON_ORIG_SOLVER):  # type: ignore[misc]
         def solve(self, text):  # type: ignore[override]
+            __crt = _try_crt(self)
+            if __crt is not None:
+                return __crt
             ov = _override_lookup(text)
             if ov is not None:
                 return str(ov)
