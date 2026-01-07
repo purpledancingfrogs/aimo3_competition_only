@@ -7,7 +7,7 @@ import os as _os
 
 # --- CRT(2) micro-solver (unicode ? supported) ---
 
-_CRT2_RE = re.compile(r"x\s*(?:\u2261|?|=)\s*([+-]?\d+)\s*\(\s*mod(?:ulo)?\s*(\d+)\s*\)", re.IGNORECASE)
+_CRT2_RE = re.compile(r"x\s*(?:\\u2261|=)\s*([+-]?\d+)\s*\(\s*mod(?:ulo)?\s*(\d+)\s*\)", re.IGNORECASE)
 def _egcd(a:int,b:int):
     a=int(a); b=int(b)
     x0,y0,x1,y1 = 1,0,0,1
