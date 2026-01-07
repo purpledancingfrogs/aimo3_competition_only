@@ -1,4 +1,0 @@
-tools\selfplay_v1.jsonl	N=320	OK=320	ACC=1.000000
-kaggle_data\reference.csv	N=10	OK=10	ACC=1.000000
-reference.csv	N=10	OK=10	ACC=1.000000
-tools\reference_problems.jsonl	N=10	OK=10	ACC=1.000000
