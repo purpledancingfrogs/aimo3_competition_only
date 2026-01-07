@@ -24,20 +24,36 @@ def dynamic_math_engine(text):
     from sympy import symbols, Eq, solve as sympy_solve, sympify
     
     try:
+        # 0. TARGET DETECTION
         target_var = None
         target_match = re.search(r'(?:find|value of|calculate|determine|what is)\s+([a-z])\b', text, re.IGNORECASE)
         if target_match:
             target_var = target_match.group(1).lower()
 
+        # 1. CLEANING
         clean_text = text.lower().replace('^', '**').replace('−', '-')
+        
+        # 2. RATIO FIX: 3:4 -> 3/4, x:y -> x/y
+        # Must happen BEFORE we delete colons
         clean_text = re.sub(r'([a-z0-9]+)\s*:\s*([a-z0-9]+)', r'\1/\2', clean_text)
+        
+        # 3. SEPARATOR FIX (Turn conjunctions into NEWLINES)
         clean_text = re.sub(r'\b(and|if|where|given)\b', '\n', clean_text)
-        clean_text = re.sub(r'[,;.]', '\n', clean_text)
+        clean_text = re.sub(r'[,;]', '\n', clean_text) # Removed colon from split list
+        
+        # 4. COLON SANITIZATION (Grok Fix)
+        # Now that ratios are saved, treat remaining colons as spaces/separators
+        # This prevents "Solve:" from breaking the parser
+        clean_text = clean_text.replace(':', ' ')
+        
+        # 5. EQUATION "IS" FIX
         clean_text = re.sub(r'\s+(is|equals|equal to)\s+', '=', clean_text)
 
+        # 6. NOISE SCRUBBER
         stopwords = r'\b(the|ratio|find|solve|calculate|determine|value|of|proportion|what)\b'
         clean_text = re.sub(stopwords, ' ', clean_text)
 
+        # 7. Extract Equations Line-by-Line
         raw_eqs = []
         for line in clean_text.split('\n'):
             matches = re.findall(r'([\d\s\+\-\*\/\(\)a-z\.]+)[:=]([\d\s\+\-\*\/\(\)a-z\.]+)', line)
