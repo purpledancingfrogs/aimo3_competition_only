@@ -1,4 +1,4 @@
-# AUREON_DETERMINISM_PATCH
+﻿# AUREON_DETERMINISM_PATCH
 import os as _os
 _os.environ.setdefault('PYTHONHASHSEED','0')
 import unicodedata as _unicodedata
@@ -7,7 +7,7 @@ def _aureon_normalize(_t):
     if _t is None: return ''
     _t = _unicodedata.normalize('NFKC', str(_t))
     _t = _t.replace('\u200b','').replace('\ufeff','').replace('\u00a0',' ')
-    _t = _t.translate(str.maketrans({'−':'-','–':'-','—':'-','﹣':'-','‐':'-','-':'-'}))
+    _t = _t.translate(str.maketrans({'ΓêÆ':'-','ΓÇô':'-','ΓÇö':'-','∩╣ú':'-','ΓÇÉ':'-','-':'-'}))
     _t = _re.sub(r'[ \t]+',' ', _t)
     _t = _re.sub(r'\n{3,}','\n\n', _t)
     return _t.strip()
@@ -139,12 +139,12 @@ def _override_lookup(text: str):
 
 _INT_RE = re.compile(r"-?\d+")
 _EQ_RE = re.compile(r"(?P<lhs>[^\r\n=]{1,140}?[xy][^\r\n=]{0,140}?)\s*=\s*(?P<rhs>-?\d+)\b", re.IGNORECASE)
-_CONG_RE = re.compile(r"x\s*â‰¡\s*(-?\d+)\s*\(\s*mod\s*(\d+)\s*\)", re.IGNORECASE)
+_CONG_RE = re.compile(r"x\s*├óΓÇ░┬í\s*(-?\d+)\s*\(\s*mod\s*(\d+)\s*\)", re.IGNORECASE)
 
 def _norm(s: str) -> str:
     s = s.replace("\u2212", "-").replace("\u2013", "-").replace("\u2014", "-")
     s = s.replace("\u00d7", "*").replace("\u00b7", "*")
-    s = s.replace("âˆ’", "-")
+    s = s.replace("├ó╦åΓÇÖ", "-")
     return s
 
 def _first_int(s: str) -> Optional[int]:
@@ -256,15 +256,15 @@ def _handle_nCk(text: str) -> Optional[str]:
     return str(math.comb(n, k))
 
 def _crt_pair(a1: int, m1: int, a2: int, m2: int) -> Optional[Tuple[int, int]]:
-    # returns (a, m) with x â‰¡ a (mod m)
+    # returns (a, m) with x ├óΓÇ░┬í a (mod m)
     g = math.gcd(m1, m2)
     if (a2 - a1) % g != 0:
         return None
     l = m1 // g * m2
     m1g = m1 // g
     m2g = m2 // g
-    # solve m1 * t â‰¡ (a2-a1) (mod m2)
-    # reduce: m1g * t â‰¡ (a2-a1)/g (mod m2g)
+    # solve m1 * t ├óΓÇ░┬í (a2-a1) (mod m2)
+    # reduce: m1g * t ├óΓÇ░┬í (a2-a1)/g (mod m2g)
     rhs = (a2 - a1) // g
     inv = pow(m1g % m2g, -1, m2g)
     t = (rhs % m2g) * inv % m2g
@@ -273,7 +273,7 @@ def _crt_pair(a1: int, m1: int, a2: int, m2: int) -> Optional[Tuple[int, int]]:
 
 def _handle_crt(text: str) -> Optional[str]:
     t = text.lower()
-    if "â‰¡" not in text and "mod" not in t:
+    if "├óΓÇ░┬í" not in text and "mod" not in t:
         return None
     congr = [(int(a), int(m)) for (a, m) in _CONG_RE.findall(text)]
     if len(congr) < 2:
@@ -394,10 +394,10 @@ def _handle_fact_digitsum(text: str) -> Optional[str]:
 def _norm2(prompt: str) -> str:
     s = _norm2(prompt)
     # common UTF-8->cp1252 mojibake from exported datasets
-    s = (s.replace("â‰¡", "≡")
-           .replace("â‰¤", "≤")
-           .replace("â‰¥", "≥")
-           .replace("Â", ""))
+    s = (s.replace("├óΓÇ░┬í", "Γëí")
+           .replace("├óΓÇ░┬ñ", "Γëñ")
+           .replace("├óΓÇ░┬Ñ", "ΓëÑ")
+           .replace("├é", ""))
     return s
 # === AUREON_NORM2_MOJIBAKE_END ===
 
@@ -416,7 +416,7 @@ def _inv_mod(a: int, m: int):
     return x % m
 
 def _crt2(a: int, m: int, b: int, n: int):
-    # solve x≡a (mod m), x≡b (mod n); return smallest nonnegative or None if inconsistent
+    # solve xΓëía (mod m), xΓëíb (mod n); return smallest nonnegative or None if inconsistent
     if m == 0 or n == 0:
         return None
     m = abs(int(m)); n = abs(int(n))
@@ -437,9 +437,9 @@ def _crt2(a: int, m: int, b: int, n: int):
     return x % l
 
 def _handle_crt(s: str):
-    # accept "≡", mojibake "â‰¡", or plain "="
-    s2 = s.replace("â‰¡", "≡")
-    pat = re.compile(r'x\s*(?:≡|=)\s*([+-]?\d+)\s*\(mod\s*([+-]?\d+)\)', re.IGNORECASE)
+    # accept "Γëí", mojibake "├óΓÇ░┬í", or plain "="
+    s2 = s.replace("├óΓÇ░┬í", "Γëí")
+    pat = re.compile(r'x\s*(?:Γëí|=)\s*([+-]?\d+)\s*\(mod\s*([+-]?\d+)\)', re.IGNORECASE)
     hits = pat.findall(s2)
     if len(hits) >= 2:
         a, m = int(hits[0][0]), int(hits[0][1])
@@ -624,11 +624,11 @@ _SPACE_EQUIV = {
     "\u00a0", "\u2009", "\u202f", "\u2007", "\u205f",
 }
 _DASH_MAP = str.maketrans({
-    "−":"-","–":"-","—":"-","﹣":"-","‐":"-","-":"-",
-    "＋":"+","－":"-","＝":"=","＊":"*","／":"/",
+    "ΓêÆ":"-","ΓÇô":"-","ΓÇö":"-","∩╣ú":"-","ΓÇÉ":"-","-":"-",
+    "∩╝ï":"+","∩╝ì":"-","∩╝¥":"=","∩╝è":"*","∩╝Å":"/",
 })
 _SUP_DIG = str.maketrans({
-    "⁰":"0","¹":"1","²":"2","³":"3","⁴":"4","⁵":"5","⁶":"6","⁷":"7","⁸":"8","⁹":"9",
+    "Γü░":"0","┬╣":"1","┬▓":"2","┬│":"3","Γü┤":"4","Γü╡":"5","Γü╢":"6","Γü╖":"7","Γü╕":"8","Γü╣":"9",
 })
 
 def _norm_text(t: str) -> str:
@@ -705,8 +705,8 @@ def _solve_powmod(t: str):
     return pow(a, e, mod)
 
 def _solve_congruence_single(t: str):
-    # x ≡ a (mod m)
-    m = _re.search(r"\bx\b\s*(?:≡|=|==)\s*([+-]?\d+)\s*(?:\(|\[)?\s*(?:mod|%|modulo)\s*([+-]?\d+)\s*(?:\)|\])?", t, _re.I)
+    # x Γëí a (mod m)
+    m = _re.search(r"\bx\b\s*(?:Γëí|=|==)\s*([+-]?\d+)\s*(?:\(|\[)?\s*(?:mod|%|modulo)\s*([+-]?\d+)\s*(?:\)|\])?", t, _re.I)
     if not m:
         return None
     a = int(m.group(1)); mod = int(m.group(2))
@@ -760,7 +760,7 @@ def _coef_var(term: str, var: str):
     # supports forms: 7*x, -x, +3x, x
     term = term.replace(" ", "")
     # normalize "*"
-    term = term.replace("×","*")
+    term = term.replace("├ù","*")
     pattern = r"([+-]?\d+)?\*?"+_re.escape(var)
     total = 0
     for m in _re.finditer(pattern, term):
