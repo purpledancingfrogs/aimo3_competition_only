@@ -267,6 +267,84 @@ import os, json, re, unicodedata, glob
 
 # === REFBENCH_OVERRIDES_BEGIN ===
 import os, json, re, glob, unicodedata
+
+# CRT_PATCH_V3
+# Deterministic CRT(k) for smallest nonnegative solution to x ? a_i (mod n_i)
+_CRT_RE = re.compile(r"\bx\b\s*(?:?|=)\s*([+-]?\d+)\s*(?:\(\s*)?mod(?:ulo)?\s*(\d+)\s*(?:\)\s*)?", re.IGNORECASE)
+
+def _egcd(a: int, b: int):
+    x0, y0, x1, y1 = 1, 0, 0, 1
+    while b:
+        q = a // b
+        a, b = b, a - q * b
+        x0, x1 = x1, x0 - q * x1
+        y0, y1 = y1, y0 - q * y1
+    return a, x0, y0
+
+def _inv_mod(a: int, m: int):
+    g, x, _ = _egcd(a, m)
+    if g != 1:
+        return None
+    return x % m
+
+def _crt_pair(a1: int, n1: int, a2: int, n2: int):
+    # returns (a, n) with a mod n, or None if inconsistent
+    if n1 <= 0 or n2 <= 0:
+        return None
+    a1 %= n1
+    a2 %= n2
+    g = __import__("math").gcd(n1, n2)
+    if (a2 - a1) % g != 0:
+        return None
+    n1g = n1 // g
+    n2g = n2 // g
+    inv = _inv_mod(n1g % n2g, n2g)
+    if inv is None:
+        return None
+    t = ((a2 - a1) // g) % n2g
+    t = (t * inv) % n2g
+    a = a1 + n1 * t
+    n = n1 * n2g
+    a %= n
+    return a, n
+
+def _crt_k(congs):
+    a, n = congs[0]
+    a %= n
+    for a2, n2 in congs[1:]:
+        res = _crt_pair(a, n, a2, n2)
+        if res is None:
+            return None
+        a, n = res
+    return a, n
+
+def _crt_solve_if_applicable(text):
+    if not isinstance(text, str):
+        return None
+    low = text.lower()
+    if ("mod" not in low) and ("?" not in text) and ("congru" not in low):
+        return None
+    found = _CRT_RE.findall(text)
+    if len(found) < 2:
+        return None
+    congs = []
+    for a_s, n_s in found:
+        try:
+            a = int(a_s)
+            n = int(n_s)
+        except Exception:
+            continue
+        if n <= 0:
+            continue
+        congs.append((a % n, n))
+    if len(congs) < 2:
+        return None
+    res = _crt_k(congs)
+    if res is None:
+        return None
+    a, n = res
+    a %= n
+    return str(a)
 _OVERRIDES_CACHE = None
 
 def _refbench_key(text: str) -> str:
@@ -318,6 +396,9 @@ try:
     _AUREON_ORIG_SOLVER = Solver  # type: ignore[name-defined]
     class Solver(_AUREON_ORIG_SOLVER):  # type: ignore[misc]
         def solve(self, text):  # type: ignore[override]
+            __crt = _crt_solve_if_applicable(self)
+            if __crt is not None:
+                return __crt
             # CRT_EARLY_PATCH_V2
             try:
                 tl = prompt.lower()
