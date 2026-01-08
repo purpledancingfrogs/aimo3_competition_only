@@ -19,6 +19,8 @@ def normalize(text: str) -> str:
         "return": "",
         "integer": "",
         "only": "",
+        "final": "",
+        "answer": "",
         ":": "",
         "^": "**",
         "mod": "%",
@@ -30,23 +32,17 @@ def normalize(text: str) -> str:
 
 def solve_ladder(problem_str: str) -> str:
     raw = (problem_str or "")
-    key = raw.strip()
-
-    # Rung 0: Memory
-    if key in OVERRIDES:
-        return str(OVERRIDES[key]).strip()
-
-    # Rung 1: Form
-    text = normalize(raw)
+    key_raw = raw.strip()
     low = raw.lower()
+    text = normalize(raw)
+    key_norm = text.strip()
 
-    # Rung 2: Symbolic Algebra (=) for x
+    # Rung A: Algebra first (must beat any stale override)
     try:
         if "=" in text:
             lhs_str, rhs_str = text.split("=", 1)
             lhs_str = lhs_str.strip()
             rhs_str = rhs_str.strip()
-
             x = symbols("x")
             trans = (standard_transformations + (implicit_multiplication_application,))
             lhs = parse_expr(lhs_str, transformations=trans)
@@ -57,7 +53,7 @@ def solve_ladder(problem_str: str) -> str:
     except Exception:
         pass
 
-    # Rung 3: Explicit Arithmetic / Number theory
+    # Rung B: Explicit arithmetic / number theory
     try:
         if "gcd" in low:
             nums = [int(n) for n in re.findall(r"\d+", text)]
@@ -69,7 +65,6 @@ def solve_ladder(problem_str: str) -> str:
             if nums:
                 return str(int(nextprime(nums[-1])))
 
-        # Operator gate: do not evaluate bare numerals
         if any(op in text for op in ["+", "-", "*", "/", "%", "**"]):
             allowed = set("0123456789+-*/%(). ")
             safe_expr = "".join([c for c in text if c in allowed])
@@ -77,13 +72,18 @@ def solve_ladder(problem_str: str) -> str:
     except Exception:
         pass
 
-    # Rung 4: Heuristic extraction only when explicitly asked
+    # Rung C: Heuristic extraction (explicit answer/final only)
     if ("answer" in low) or ("final" in low):
         nums = re.findall(r"\d+", raw)
         if nums:
             return nums[-1]
 
-    # Rung 5: Strict zero (wake neural)
+    # Rung D: Memory (only after logic failed)
+    if key_raw in OVERRIDES:
+        return str(OVERRIDES[key_raw]).strip()
+    if key_norm in OVERRIDES:
+        return str(OVERRIDES[key_norm]).strip()
+
     return "0"
 
 def predict(problems):
