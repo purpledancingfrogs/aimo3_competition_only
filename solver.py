@@ -19,6 +19,8 @@ def normalize(text):
         "return": "",
         "integer": "",
         "only": "",
+        "final": "",
+        "answer": "",
         ":": "",
         "^": "**",
         "mod": "%",
@@ -28,6 +30,32 @@ def normalize(text):
         t = t.replace(k, v)
     return t.strip()
 
+def _choose_var(lhs, rhs):
+    syms = list(lhs.free_symbols | rhs.free_symbols)
+    if not syms:
+        return None
+    for s in syms:
+        if s.name == "x":
+            return s
+    return sorted(syms, key=lambda s: s.name)[0]
+
+def _int_if_exact(expr):
+    try:
+        if getattr(expr, "is_Integer", False):
+            return str(int(expr))
+        if getattr(expr, "is_Rational", False):
+            if getattr(expr, "q", None) == 1:
+                return str(int(expr))
+            return None
+        if getattr(expr, "is_number", False):
+            v = float(expr)
+            r = round(v)
+            if abs(v - r) < 1e-9:
+                return str(int(r))
+    except Exception:
+        pass
+    return None
+
 def solve_ladder(problem_str):
     raw = (problem_str or "")
     low = raw.lower()
@@ -35,51 +63,65 @@ def solve_ladder(problem_str):
 
     # Rung 2: Active Logic (Math > Memory)
     try:
-        # A) Symbolic Algebra
+        # A) Algebra with auto-variable detection
         if "=" in text:
             lhs_str, rhs_str = text.split("=", 1)
             lhs_str = lhs_str.strip()
             rhs_str = rhs_str.strip()
 
-            x = symbols("x")
             trans = (standard_transformations + (implicit_multiplication_application,))
             lhs = parse_expr(lhs_str, transformations=trans)
             rhs = parse_expr(rhs_str, transformations=trans)
-            sol = solve(Eq(lhs, rhs), x)
-            if sol:
-                return str(int(sol[0]))
 
-        # B) Explicit number theory / arithmetic
+            var = _choose_var(lhs, rhs)
+            if var is not None:
+                sol = solve(Eq(lhs, rhs), var)
+                if isinstance(sol, dict):
+                    cand = sol.get(var, None)
+                elif sol and isinstance(sol[0], dict):
+                    cand = sol[0].get(var, None)
+                else:
+                    cand = sol[0] if sol else None
+
+                if cand is not None:
+                    as_int = _int_if_exact(cand)
+                    if as_int is not None:
+                        return as_int
+
+        # B) GCD / Next prime
         if "gcd" in low:
             nums = [int(n) for n in re.findall(r"\d+", text)]
             if len(nums) >= 2:
                 return str(int(gcd(nums[0], nums[1])))
 
-        if "prime" in low and "greater" in low:
+        if ("prime" in low) and ("greater" in low):
             nums = [int(n) for n in re.findall(r"\d+", text)]
             if nums:
                 return str(int(nextprime(nums[-1])))
 
+        # C) Arithmetic only when an operator is present
         if any(op in text for op in ["+", "-", "*", "/", "%", "**"]):
             allowed = set("0123456789+-*/%(). ")
             safe_expr = "".join([c for c in text if c in allowed])
             if any(ch.isdigit() for ch in safe_expr):
-                return str(int(sympify(safe_expr)))
+                v = sympify(safe_expr)
+                as_int = _int_if_exact(v)
+                if as_int is not None:
+                    return as_int
     except Exception:
         pass
 
-    # Rung 3: Memory (Overrides) — only if math failed
+    # Rung 3: Memory (exact raw match only)
     key = raw.strip()
     if key in OVERRIDES:
         return str(OVERRIDES[key]).strip()
 
-    # Rung 4: Heuristic extraction (explicit answer/final only)
+    # Rung 4: Heuristic extraction only with explicit answer/final
     if ("answer" in low) or ("final" in low):
         nums = re.findall(r"\d+", raw)
         if nums:
             return nums[-1]
 
-    # Rung 5: Zero return
     return "0"
 
 def predict(problems):
