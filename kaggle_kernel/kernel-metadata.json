@@ -1,0 +1,19 @@
+{
+    "id":  "nadinesquires/aimo3-monolith-hybrid-20260108-1321",
+    "title":  "aimo3-monolith-hybrid-20260108-1321",
+    "code_file":  "submission.py",
+    "language":  "python",
+    "kernel_type":  "script",
+    "is_private":  true,
+    "enable_gpu":  true,
+    "enable_internet":  false,
+    "dataset_sources":  [
+
+                        ],
+    "competition_sources":  [
+                                "ai-mathematical-olympiad-progress-prize-3"
+                            ],
+    "kernel_sources":  [
+
+                       ]
+}
