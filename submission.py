@@ -1,14 +1,35 @@
 import os
+import sys
 import time
+import subprocess
 import traceback
+import re
+import pandas as pd
 
-# --- CONFIG ---
-KAGGLE_AGENT_PATH = "/kaggle/input/deepseek-math"  # placeholder; must exist on Kaggle if used
-LOCAL_MODE = (os.name == "nt")
-TIME_LIMIT_SEC = 9 * 60 * 60 - 300  # 9h minus 5m
+# --- CONFIGURATION & INVARIANTS ---
+KAGGLE_AGENT_PATH = "/kaggle/input/deepseek-math"
+LOCAL_MODE = os.name == 'nt'
+TIME_LIMIT_SEC = 9 * 60 * 60 - 300
 START_TIME = time.time()
 
-# --- OPTIONAL NEURAL AGENT (stub; safe to keep disabled) ---
+# --- UTILITY: CODE EXECUTION ---
+def run_generated_code(code, timeout=5):
+    try:
+        wrapped_code = "import sys\nimport math\nfrom sympy import *\n" + code
+        result = subprocess.run(
+            [sys.executable, "-c", wrapped_code],
+            capture_output=True,
+            text=True,
+            timeout=timeout
+        )
+        if result.returncode == 0:
+            lines = result.stdout.strip().split('\n')
+            return lines[-1].strip() if lines else None
+        return None
+    except Exception:
+        return None
+
+# --- AGENT ALPHA: THE NEURAL ARCHITECT ---
 class NeuralAgent:
     def __init__(self):
         self.model = None
@@ -17,87 +38,84 @@ class NeuralAgent:
             try:
                 from transformers import AutoModelForCausalLM, AutoTokenizer
                 import torch
-                # NOTE: Only works if KAGGLE_AGENT_PATH exists in Kaggle dataset inputs.
                 self.tokenizer = AutoTokenizer.from_pretrained(KAGGLE_AGENT_PATH)
                 self.model = AutoModelForCausalLM.from_pretrained(
                     KAGGLE_AGENT_PATH,
                     torch_dtype=torch.float16,
                     device_map="auto",
-                    trust_remote_code=True,
+                    trust_remote_code=True
                 )
             except Exception:
                 self.model = None
                 self.tokenizer = None
 
-    def generate_python_plan(self, problem: str):
-        return None
+    def generate_python_plan(self, problem):
+        if not self.model:
+            return None
+        prompt = f"""User: {problem}
+Please write a Python script to solve this problem.
+The script should print the final answer as a single integer modulo 1000.
+Use 'sympy' or brute force loops if necessary.
+Wrap the code in ```python ... ``` blocks.
+Assistant:
+"""
+        try:
+            inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=512,
+                temperature=0.0,
+                do_sample=False
+            )
+            response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            code_match = re.search(r"```python(.*?)```", response, re.DOTALL)
+            return code_match.group(1) if code_match else None
+        except Exception:
+            return None
 
-# --- SYMBOLIC KERNEL ---
-import solver  # must be pure; no side effects
+# --- AGENT BETA: THE SYMBOLIC EXECUTOR ---
+import solver
 
-def execute_with_safety(problem: str) -> int:
-    # time budget gate
+def execute_with_safety(problem):
     if (time.time() - START_TIME) > TIME_LIMIT_SEC:
         return 0
 
-    # neural path disabled by default (safe)
-    # plan = neural_agent.generate_python_plan(problem)
-    # if plan: ...
+    agent = NeuralAgent()
+    plan = agent.generate_python_plan(problem)
+    if plan:
+        ans = run_generated_code(plan)
+        if ans is not None:
+            try:
+                return int(float(ans))
+            except Exception:
+                pass
 
-    # symbolic fallback
     try:
-        # prefer official solve() if present; else allow solve_problem()
-        if hasattr(solver, "solve"):
-            out = solver.solve(problem)
-        elif hasattr(solver, "solve_problem"):
-            out = solver.solve_problem(problem)
-        else:
-            return 0
-
-        # enforce integer-only
-        try:
-            return int(str(out).strip())
-        except Exception:
-            return int(float(str(out).strip()))
+        return solver.solve_problem(problem)
     except Exception:
         return 0
 
-def mock_main():
-    tests = [
-        "2+2",
-        "Solve 2*x=10",
-        "gcd(100, 20)",
-        "Minimize (x-5)^2",
-    ]
-    for p in tests:
-        a = execute_with_safety(p)
-        print(f"{p} -> {a}")
-
 def main():
-    # Kaggle environment (AIMO)
     try:
         import aimo
         env = aimo.make_env()
         iter_test = env.iter_test()
-    except Exception:
-        # local mode fallback
-        return mock_main()
-
-    neural_agent = NeuralAgent()  # kept for future, safe if load fails
+    except ImportError:
+        return
 
     for test_df, sample_submission in iter_test:
         try:
-            problem = str(test_df.iloc[0]["problem"])
-            ans = execute_with_safety(problem)
-            sample_submission["answer"] = int(ans)
+            problem = str(test_df.iloc[0].get('problem', ''))
+            answer = execute_with_safety(problem)
+            try:
+                final_answer = int(float(str(answer))) % 1000
+            except Exception:
+                final_answer = 0
+            sample_submission['answer'] = final_answer
             env.predict(sample_submission)
         except Exception:
-            # never crash loop
-            try:
-                sample_submission["answer"] = 0
-                env.predict(sample_submission)
-            except Exception:
-                pass
+            sample_submission['answer'] = 0
+            env.predict(sample_submission)
 
 if __name__ == "__main__":
     main()
