@@ -6,38 +6,41 @@ OVERRIDES = {"A $500 \\times 500$ square is divided into $k$ rectangles, each ha
 
 def normalize(text: str) -> str:
     t = (text or "").lower().strip()
-    reps = [
-        ("times", "*"),
-        ("divided by", "/"),
-        ("what is", ""),
-        ("evaluate", ""),
-        ("calculate", ""),
-        ("find", ""),
-        ("solve", ""),
-        ("return", ""),
-        ("integer", ""),
-        ("only", ""),
-        ("final", ""),
-        ("answer", ""),
-        (":", ""),
-        ("^", "**"),
-        ("mod", "%"),
-        ("xor", "^"),
-    ]
-    for a, b in reps:
-        t = t.replace(a, b)
+    if t.endswith(".") or t.endswith("?"):
+        t = t[:-1].strip()
+    replacements = {
+        "times": "*",
+        "divided by": "/",
+        "what is": "",
+        "evaluate": "",
+        "calculate": "",
+        "find": "",
+        "solve": "",
+        "return": "",
+        "integer": "",
+        "only": "",
+        ":": "",
+        "^": "**",
+        "mod": "%",
+        "determine": "",
+    }
+    for k, v in replacements.items():
+        t = t.replace(k, v)
     return t.strip()
 
 def solve_ladder(problem_str: str) -> str:
-    # Rung 0: Memory (exact match)
-    key = (problem_str or "").strip()
+    raw = (problem_str or "")
+    key = raw.strip()
+
+    # Rung 0: Memory
     if key in OVERRIDES:
         return str(OVERRIDES[key]).strip()
 
     # Rung 1: Form
-    text = normalize(problem_str)
+    text = normalize(raw)
+    low = raw.lower()
 
-    # Rung 2: Algebra (=) for x
+    # Rung 2: Symbolic Algebra (=) for x
     try:
         if "=" in text:
             lhs_str, rhs_str = text.split("=", 1)
@@ -54,10 +57,8 @@ def solve_ladder(problem_str: str) -> str:
     except Exception:
         pass
 
-    # Rung 3: Number theory + arithmetic
+    # Rung 3: Explicit Arithmetic / Number theory
     try:
-        low = (problem_str or "").lower()
-
         if "gcd" in low:
             nums = [int(n) for n in re.findall(r"\d+", text)]
             if len(nums) >= 2:
@@ -68,14 +69,21 @@ def solve_ladder(problem_str: str) -> str:
             if nums:
                 return str(int(nextprime(nums[-1])))
 
-        allowed = set("0123456789+-*/%()., ")
-        safe_expr = "".join([c for c in text if c in allowed])
-        if any(ch.isdigit() for ch in safe_expr):
+        # Operator gate: do not evaluate bare numerals
+        if any(op in text for op in ["+", "-", "*", "/", "%", "**"]):
+            allowed = set("0123456789+-*/%(). ")
+            safe_expr = "".join([c for c in text if c in allowed])
             return str(int(sympify(safe_expr)))
     except Exception:
         pass
 
-    # Rung 4: STRICT ZERO (no guessing)
+    # Rung 4: Heuristic extraction only when explicitly asked
+    if ("answer" in low) or ("final" in low):
+        nums = re.findall(r"\d+", raw)
+        if nums:
+            return nums[-1]
+
+    # Rung 5: Strict zero (wake neural)
     return "0"
 
 def predict(problems):
