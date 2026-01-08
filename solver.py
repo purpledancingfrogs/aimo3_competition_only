@@ -2,7 +2,6 @@ import re
 import time
 import unicodedata
 
-# --- optional sympy (best-effort) ---
 try:
     import sympy as _sp
     from sympy.core.cache import clear_cache as _sp_clear_cache
@@ -12,7 +11,6 @@ except Exception:
 
 _FINAL_INT = re.compile(r"(?:FINAL_ANSWER\s*[:=]\s*|\\boxed\{\s*)(-?\d+)\s*\}?")
 _LAST_INT  = re.compile(r"(-?\d+)(?!.*-?\d+)")
-# conservative equation extraction
 _EQ = re.compile(r"([0-9xynkmabcpqrt+\-*/().\s\\^]+?)\s*=\s*([0-9xynkmabcpqrt+\-*/().\s\\^]+)")
 
 _ZERO_WIDTH = dict.fromkeys(map(ord, "\u200b\u200c\u200d\u2060\ufeff"), None)
@@ -23,7 +21,6 @@ def _clean(s: str) -> str:
     s = unicodedata.normalize("NFKC", s)
     s = s.replace("\\times", "*").replace("\\cdot", "*")
     s = s.replace("^", "**")
-    s = s.replace(" and ", ", ")
     return s
 
 def _extract_final_int(s: str):
@@ -40,20 +37,21 @@ def _extract_last_int(s: str):
         except: return None
     return None
 
-# tiny no-sympy linear handler: a*x + b = c  (supports "2*x+3=11", "2x+3=11", "2*x-3=11", "x+3=11", "-x+3=11")
+# linear x: a*x + b = c  (allow trailing punctuation on RHS)
 _LINX = re.compile(
-    r"^\s*([+-]?\s*\d*)\s*\*?\s*x\s*([+-]\s*\d+)?\s*=\s*([+-]?\s*\d+)\s*$"
+    r"^\s*([+-]?\s*\d*)\s*\*?\s*x\s*([+-]\s*\d+)?\s*=\s*([+-]?\s*\d+)\s*[.,;:]?\s*$"
+)
+_FIND_LINX = re.compile(
+    r"([+-]?\s*\d*\s*\*?\s*x\s*(?:[+-]\s*\d+)?\s*=\s*[+-]?\s*\d+\s*[.,;:]?)"
 )
 
 def _try_linear_x(s: str):
-    s0 = _clean(s)
-    s0 = s0.replace(" ", "")
+    s0 = _clean(s).replace(" ", "")
     m = _LINX.match(s0)
     if not m:
         return None
     a_raw, b_raw, c_raw = m.group(1), m.group(2), m.group(3)
 
-    # a
     if a_raw in ("", "+"):
         a = 1
     elif a_raw == "-":
@@ -62,22 +60,20 @@ def _try_linear_x(s: str):
         try: a = int(a_raw)
         except: return None
 
-    # b
-    if b_raw is None or b_raw == "":
+    if not b_raw:
         b = 0
     else:
         try: b = int(b_raw.replace(" ", ""))
         except: return None
 
-    # c
     try:
         c = int(c_raw.replace(" ", ""))
     except:
         return None
 
-    num = c - b
     if a == 0:
         return None
+    num = c - b
     if num % a != 0:
         return None
     return num // a
@@ -149,8 +145,14 @@ def solve(prompt: str) -> str:
         if v is not None:
             return str(int(v))
 
-        # fast-path: linear x without sympy
-        # try per-line first (reduces false matches)
+        # extract embedded linear equation from noisy prompts (e.g., "Solve: ... Return integer only.")
+        m = _FIND_LINX.search(s)
+        if m:
+            vx = _try_linear_x(m.group(1))
+            if vx is not None:
+                return str(int(vx))
+
+        # per-line linear attempt
         for line in s.splitlines():
             vx = _try_linear_x(line)
             if vx is not None:
