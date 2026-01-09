@@ -2,7 +2,7 @@
 Repo: purpledancingfrogs/aimo3_competition_only
 Create PR: https://github.com/purpledancingfrogs/aimo3_competition_only/pull/new/audit-evidence-c82395f-20260109182733
 Branch: audit-evidence-c82395f-20260109182733
-Commit: c82395f60e483b4484c66258c7d536df34ef25b9
+Commit: a66f0753ddee5893ed6e9ea1eebd8d10dddf3f42
 
 Evidence folder (in repo): audit/physical_substrate_evidence20260109182541/
 Files:
