@@ -1,0 +1,16 @@
+﻿AUDIT REQUEST (DEVIL'S ADVOCATE)
+Kernel: nadinesquires/aimo3-dss-submission
+Folder: C:\Users\aureon\Desktop\AIMO3_AUDIT_PACKET_20260109181345
+
+Tasks:
+1) Confirm no file I/O, no network, no subprocess, no randomness inside solver solve().
+2) Confirm Kaggle entrypoint uses AIMO3InferenceServer (not make_env) and predict(*args, **kwargs) handles Polars batch inputs.
+3) Confirm output schema: integer only, clamped, DataFrame(id, answer).
+4) Confirm determinism + guards (size/time/complexity) and safe fallback ladder.
+5) Confirm byte-identity repo solver vs Kaggle-run solver using SHA256.json + byte_compare.txt.
+
+Evidence files:
+- solver_repo.py / solver_kaggle.py
+- script.py + kernel-metadata.json
+- kaggle_run.log
+- SHA256.json + byte_compare.txt + forbidden_scan.txt

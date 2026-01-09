@@ -1,0 +1,11 @@
+﻿AUDIT REQUEST (DEVIL'S ADVOCATE) - AIMO-3
+Check these files in the repo exactly as-is; cite exact line numbers for any violation.
+
+1) solver_repo.py: confirm solve() has NO file I/O, NO network, NO subprocess, NO randomness, NO dynamic eval/exec.
+   - flags: open(), os.makedirs, pathlib, shutil, subprocess, socket, requests/urllib/http, random/numpy.random, pickle/joblib, eval/exec.
+2) determinism/guards: confirm explicit size/time/complexity guardrails OR explain why safe without them.
+3) output contract: integer-only, clamped bounds, no floats/strings/whitespace.
+4) entrypoint wiring: script.py + kernel-metadata.json uses AIMO3InferenceServer (not make_env) and predict(*args, **kwargs) handles Polars inputs.
+5) identity: compare solver_repo.py vs solver_kaggle.py; confirm they are semantically identical or list diffs.
+
+Evidence folder path (local): C:\Users\aureon\Desktop\AIMO3_AUDIT_PACKET_20260109181345 (contains solver_repo.py, solver_kaggle.py, script.py, kernel-metadata.json, kaggle_run.log, forbidden_scan.txt, SHA256.json).

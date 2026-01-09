@@ -1,0 +1,77 @@
+﻿[
+    {
+        "file":  "audit_results.json",
+        "sha256":  "D13062E454E70FFDD465FF1C8023B3A4B120092ABC80F4587D8FAD5762212CD2",
+        "bytes":  1196
+    },
+    {
+        "file":  "audit_summary.txt",
+        "sha256":  "2C8971CA94EB11A365FAF886158B8EA854BBAE7B35DA976CEA7927FCE305BB1E",
+        "bytes":  922
+    },
+    {
+        "file":  "AUDITOR_REQUEST.txt",
+        "sha256":  "4DA20FD1472F05F8CED35E175B836639F0402BA06A47516F4D8AE1CD09CA7CCE",
+        "bytes":  1363
+    },
+    {
+        "file":  "byte_compare.txt",
+        "sha256":  "81922168AA651DD37879996B1C2D44E0A1AB59B515143A21253170B36D83FCC2",
+        "bytes":  66
+    },
+    {
+        "file":  "EVIDENCE_META.txt",
+        "sha256":  "C055F687A17A3AEE08F1CC507A31D18C39627EF8B3DEEA56DFEC61480161B754",
+        "bytes":  216
+    },
+    {
+        "file":  "forbidden_scan.txt",
+        "sha256":  "9E43301A6B0BE90990F116312272C65304F64EB6C76EEF5700285F713DADDBB8",
+        "bytes":  250
+    },
+    {
+        "file":  "GEMINI_REQUEST.txt",
+        "sha256":  "74BAECCCBB46DEA40BB581DA95E624E79EB559301CA420093499479980333507",
+        "bytes":  793
+    },
+    {
+        "file":  "GROK_REQUEST.txt",
+        "sha256":  "BF8B14B50412B10D686F4620EC2ADA5A1781A9FE019EBE7021561677C921DE08",
+        "bytes":  1062
+    },
+    {
+        "file":  "kaggle_run.log",
+        "sha256":  "9C463ADB302775122B008E17DD7EDF71BE11E80FA69B2B469BCB6B304F15A9EF",
+        "bytes":  1307
+    },
+    {
+        "file":  "kernel-metadata.json",
+        "sha256":  "6492BE23E062D107E49C123C9B74C19EEF74EA32C1C6B9FB7758DD343C40A1A8",
+        "bytes":  639
+    },
+    {
+        "file":  "misses_summary.md",
+        "sha256":  "AA060501E14C6FAD4AA70AD0956BD7EDE5F7EA019A5B93C7A6E6A8D031C472F4",
+        "bytes":  192
+    },
+    {
+        "file":  "script.py",
+        "sha256":  "F61B46DF8EDE92D595DF3F095F25D2A3A9CBB0E6FB404E4CE442F7F89ADCD2F6",
+        "bytes":  70031
+    },
+    {
+        "file":  "SHA256.json",
+        "sha256":  "A083687C821A110D6DBFB42FEA36E4A79719FB4EE69DFCB8F1D24758271E84F0",
+        "bytes":  2143
+    },
+    {
+        "file":  "solver_kaggle.py",
+        "sha256":  "6231B18222740CF4EDAA1B943C38381BEAB4FB6EE1BA78936531981FD25D57DA",
+        "bytes":  4839
+    },
+    {
+        "file":  "solver_repo.py",
+        "sha256":  "3E836DFDB47FDD1D1BAFD59E1CF7CC656EB9849338E3F8786EF0F223AF45624D",
+        "bytes":  4962
+    }
+]

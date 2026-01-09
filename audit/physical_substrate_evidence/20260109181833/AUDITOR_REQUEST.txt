@@ -1,0 +1,19 @@
+﻿AUDIT REQUEST (DEVIL'S ADVOCATE) - AIMO-3
+Scope: review the listed repo files exactly as-is; cite exact line numbers for any issue.
+
+Files to review:
+- solver_repo.py (primary substrate)
+- solver_kaggle.py (captured from Kaggle run)
+- script.py + kernel-metadata.json (kernel entrypoint wiring)
+- kaggle_run.log (runtime evidence)
+- forbidden_scan.txt + byte_compare.txt + SHA256.json (integrity evidence)
+
+Checks:
+1) Forbidden operations in solver_repo.py solve(): NO file I/O, NO network, NO subprocess, NO randomness, NO eval/exec.
+   Flag any occurrences of: open(, os.makedirs, pathlib, shutil, subprocess, socket, requests/urllib/http, ftplib, random/numpy.random, pickle/joblib, eval(, exec(.
+2) Determinism/guards: confirm explicit size/time/complexity guards or prove why worst-case is bounded; require a safe fallback ladder.
+3) Output contract: integer-only answer; clamped bounds; no floats/strings/whitespace; stable return type.
+4) Kaggle wiring: confirm AIMO3InferenceServer is used (not make_env) and predict(*args, **kwargs) handles Polars batch inputs; output schema DataFrame(id, answer).
+5) Identity: compare solver_repo.py vs solver_kaggle.py; confirm identical semantics or list diffs; cross-check SHA256.json and byte_compare.txt.
+
+Local evidence folder path: C:\Users\aureon\Desktop\AIMO3_AUDIT_PACKET_20260109181345
