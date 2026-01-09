@@ -49,70 +49,30 @@ def solve(problem) -> str:
 def predict(problems):
     return [solve(p) for p in problems]
 # --- OVERRIDE_WRAPPER_V1 (do not edit by hand) ---
-def _as_int_mod1000(x):
+def _as_int_admissible(x):
+    """Convert x to a non-negative int in [0, 99999]. Return 0 on failure."""
     try:
-        return str(abs(int(float(x))) )
-    except Exception:
-        return "0"
-
-# preserve existing solve
-try:
-    _solve_core = solve  # type: ignore[name-defined]
-except Exception:
-    def _solve_core(problem):  # type: ignore[no-redef]
-        return "0"
-
-# ensure OVERRIDES exists
-try:
-    OVERRIDES  # type: ignore[name-defined]
-except Exception:
-    OVERRIDES = {}
-
-
-def _quick_arith__aureon_v1(s):
-    # AUREON_QUICK_ARITH_V1
-    import re, unicodedata
-    if s is None:
-        return None
-    t = str(s).strip()
-    if not t:
-        return None
-    t = unicodedata.normalize("NFKC", t)
-    m = re.match(r"^(?:what\s+is\s+)?(\d+)\s*([+\-*/])\s*(\d+)\s*\??\s*$", t, flags=re.I)
-    if not m:
-        return None
-    a = int(m.group(1)); op = m.group(2); b = int(m.group(3))
-    if op == '+': v = a + b
-    elif op == '-': v = a - b
-    elif op == '*': v = a * b
-    else:
-        if b == 0 or (a % b) != 0:
-            return None
-        v = a // b
-    if v < 0: v = 0
-    if v > 99999: v = 99999
-    return v
-
-def solve(problem):
-    # AUREON_QUICK_ARITH_V1
-    __qa = _quick_arith__aureon_v1(problem)
-    if __qa is not None:
-        return str(__qa)
-
-    # OVERRIDES must be checked first, before any prompt rewriting/routing
-    try:
-        if "_refbench_key" in globals():
-            key = _refbench_key(problem)  # type: ignore[name-defined]
-        elif "normalize" in globals():
-            key = normalize(problem)  # type: ignore[name-defined]
+        if x is None:
+            return 0
+        if isinstance(x, bool):
+            v = int(x)
+        elif isinstance(x, int):
+            v = x
+        elif isinstance(x, float):
+            if x != x or x in (float('inf'), float('-inf')):
+                return 0
+            v = int(x)
         else:
-            key = str(problem).strip().lower()
-        if key in OVERRIDES:
-            return _as_int_mod1000(OVERRIDES.get(key))
+            ss = str(x).strip()
+            mm = re.search(r"[-+]?\d+", ss)
+            if not mm:
+                return 0
+            v = int(mm.group(0))
+        if v < 0:
+            return 0
+        if v > 99999:
+            return 99999
+        return v
     except Exception:
-        pass
-    return _as_int_mod1000(_solve_core(problem))
+        return 0
 
-def predict(problems):
-    return [solve(p) for p in problems]
-# --- end OVERRIDE_WRAPPER_V1 ---
