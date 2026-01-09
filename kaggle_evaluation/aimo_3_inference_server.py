@@ -11,7 +11,9 @@ if _ROOT not in _sys.path: _sys.path.insert(0, _ROOT)
 class AIMO3InferenceServer(kaggle_evaluation.core.templates.InferenceServer):
     def __init__(self, data_paths=None):
         # Register at least one endpoint listener for kaggle_evaluation.core.templates.InferenceServer
-        super().__init__(self.predict)
+        def _predict(df, _self=self):
+            return _self.predict(df)
+        super().__init__(_predict)
         self._data_paths = data_paths
 
     def predict(self, df):
