@@ -26,7 +26,7 @@ def _clamp(v) -> str:
         x = int(float(str(v)))
     except Exception:
         return "0"
-    return str(abs(x) )
+    return str(abs(x) % 1000)
 
 def _oracle_log(prompt: str) -> None:
     if os.environ.get("AUREON_SELF_AUDIT_ORACLE", "") != "1":
@@ -51,7 +51,7 @@ def predict(problems):
 # --- OVERRIDE_WRAPPER_V1 (do not edit by hand) ---
 def _as_int_mod1000(x):
     try:
-        return str(abs(int(float(x))) )
+        return str(abs(int(float(x))) % 1000)
     except Exception:
         return "0"
 
@@ -68,37 +68,7 @@ try:
 except Exception:
     OVERRIDES = {}
 
-
-def _quick_arith__aureon_v1(s):
-    # AUREON_QUICK_ARITH_V1
-    import re, unicodedata
-    if s is None:
-        return None
-    t = str(s).strip()
-    if not t:
-        return None
-    t = unicodedata.normalize("NFKC", t)
-    m = re.match(r"^(?:what\s+is\s+)?(\d+)\s*([+\-*/])\s*(\d+)\s*\??\s*$", t, flags=re.I)
-    if not m:
-        return None
-    a = int(m.group(1)); op = m.group(2); b = int(m.group(3))
-    if op == '+': v = a + b
-    elif op == '-': v = a - b
-    elif op == '*': v = a * b
-    else:
-        if b == 0 or (a % b) != 0:
-            return None
-        v = a // b
-    if v < 0: v = 0
-    if v > 99999: v = 99999
-    return v
-
 def solve(problem):
-    # AUREON_QUICK_ARITH_V1
-    __qa = _quick_arith__aureon_v1(problem)
-    if __qa is not None:
-        return str(__qa)
-
     # OVERRIDES must be checked first, before any prompt rewriting/routing
     try:
         if "_refbench_key" in globals():
