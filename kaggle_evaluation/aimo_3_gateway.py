@@ -32,7 +32,8 @@ def _to_i64(x) -> int:
         return 0
 
 class AIMO3Gateway:
-    def __init__(self):
+    def __init__(self, data_paths=None):
+        self._data_paths = data_paths
         from solver import solve
         self._solve = solve
 
