@@ -91,3 +91,10 @@ tools/*.log
 # local audit outputs
 tools/self_audit_strict.py
 
+# local audit artifacts
+tools/*.py
+tools/*.txt
+tools/eval_*
+tools/*failures*.jsonl
+tools/*summary*.txt
+tools/aimo3_submit_*.zip

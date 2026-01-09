@@ -1,0 +1,19 @@
+{
+    "id":  "nadinesquires/aimo3-stainless-20260108-1335",
+    "title":  "aimo3-stainless-20260108-1335",
+    "code_file":  "aimo_solution.py",
+    "language":  "python",
+    "kernel_type":  "script",
+    "is_private":  true,
+    "enable_gpu":  false,
+    "enable_internet":  false,
+    "dataset_sources":  [
+
+                        ],
+    "competition_sources":  [
+                                "ai-mathematical-olympiad-progress-prize-3"
+                            ],
+    "kernel_sources":  [
+
+                       ]
+}
