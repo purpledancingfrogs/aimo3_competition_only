@@ -42,7 +42,9 @@ def _oracle_log(prompt: str) -> None:
 
 def solve(problem) -> str:
     # --- ARITH_FASTPATH_V2_START ---
-    s0 = str(prompt).strip()
+    _k = next(iter(locals().keys()), None)
+    _arg0 = locals().get(_k, '')
+    s0 = str(_arg0).strip()
     m0 = re.fullmatch(r"\s*(\d+)\s*([+\-*])\s*(\d+)\s*", s0)
     if m0:
         a = int(m0.group(1)); b = int(m0.group(3)); op = m0.group(2)
