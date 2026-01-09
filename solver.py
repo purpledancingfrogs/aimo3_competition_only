@@ -40,6 +40,50 @@ def _oracle_log(prompt: str) -> None:
         pass
 
 def solve(problem) -> str:
+    # --ARITH_PROBE_V1--
+    try:
+        import re as _re
+        import ast as _ast
+        from fractions import Fraction as _F
+        _t = str(problem).strip()
+        _t = _t.replace('?', '').strip()
+        _m = _re.match(r'^(?:what\s+is|compute|calculate)\s+(.+)$', _t, flags=_re.I)
+        if _m:
+            _expr = _m.group(1).strip()
+            if _re.fullmatch(r'[0-9\s\+\-\*\/\(\)]+', _expr):
+                _tree = _ast.parse(_expr, mode='eval')
+                def _ev(n):
+                    if isinstance(n, _ast.Expression):
+                        return _ev(n.body)
+                    if isinstance(n, _ast.Constant) and isinstance(n.value, int):
+                        return _F(n.value, 1)
+                    if isinstance(n, _ast.UnaryOp) and isinstance(n.op, (_ast.UAdd, _ast.USub)):
+                        v = _ev(n.operand)
+                        return v if isinstance(n.op, _ast.UAdd) else -v
+                    if isinstance(n, _ast.BinOp) and isinstance(n.op, (_ast.Add, _ast.Sub, _ast.Mult, _ast.Div, _ast.FloorDiv)):
+                        a = _ev(n.left)
+                        b = _ev(n.right)
+                        if isinstance(n.op, _ast.Add):
+                            return a + b
+                        if isinstance(n.op, _ast.Sub):
+                            return a - b
+                        if isinstance(n.op, _ast.Mult):
+                            return a * b
+                        if isinstance(n.op, _ast.Div):
+                            return a / b
+                        if isinstance(n.op, _ast.FloorDiv):
+                            q = a / b
+                            if q.denominator != 1:
+                                raise ValueError('non-integer floordiv')
+                            return _F(int(q.numerator), 1)
+                    raise ValueError('unsafe expr')
+                _v = _ev(_tree.body)
+                if _v.denominator == 1:
+                    _x = int(_v.numerator)
+                    if 0 <= _x <= 99999:
+                        return _x
+    except Exception:
+        pass
     _oracle_log(problem)
     k = _refbench_key(problem)
     if k in OVERRIDES:
