@@ -1,0 +1,26 @@
+﻿AUDIT REQUEST (DEVIL'S ADVOCATE) — AIMO-3
+Repo: https://github.com/purpledancingfrogs/aimo3_competition_only
+Create PR: [https://github.com/https://github.com/purpledancingfrogs/aimo3_competition_only/pull/new/audit-evidence-c82395f-20260109182733](https://github.com/https://github.com/purpledancingfrogs/aimo3_competition_only/pull/new/audit-evidence-c82395f-20260109182733)
+Branch: audit-evidence-c82395f-20260109182733
+Commit: 8cdba1c4dbe7c2868d690ecb0fa0c079d061263c
+
+Evidence folder (in repo): audit/physical_substrate_evidence20260109182541/
+Files:
+- audit/physical_substrate_evidence20260109182541/solver_repo.py
+- audit/physical_substrate_evidence20260109182541/solver_kaggle.py
+- audit/physical_substrate_evidence20260109182541/script.py
+- audit/physical_substrate_evidence20260109182541/kernel-metadata.json
+- audit/physical_substrate_evidence20260109182541/kaggle_run.log
+- audit/physical_substrate_evidence20260109182541/forbidden_scan.txt
+- audit/physical_substrate_evidence20260109182541/byte_compare.txt
+- audit/physical_substrate_evidence20260109182541/SHA256.json
+- audit/physical_substrate_evidence20260109182541/GROK_REQUEST.txt
+- audit/physical_substrate_evidence20260109182541/GEMINI_REQUEST.txt
+
+Tasks (cite exact line numbers for any issue):
+1) solver_repo.py: solve() has NO file I/O, NO network, NO subprocess, NO randomness, NO eval/exec.
+   Flags: open(), os.makedirs/pathlib/shutil, subprocess, socket, requests/urllib/http/ftplib, random/numpy.random, pickle/joblib, eval(), exec().
+2) determinism/guards: confirm explicit size/time/complexity bounds OR justify safety without them.
+3) output contract: integer-only; clamped bounds; stable across repeated calls.
+4) Kaggle wiring: script.py + kernel-metadata.json uses AIMO3InferenceServer (not make_env); predict(*args, **kwargs) handles Polars inputs; returns DataFrame(id, answer).
+5) identity: compare solver_repo.py vs solver_kaggle.py; verify SHA256.json + byte_compare.txt; list any diffs.
