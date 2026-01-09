@@ -1,0 +1,13 @@
+{
+  "id": "nadinesquires/aimo-3-submission",
+  "title": "aimo-3-submission",
+  "code_file": "notebook.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": false,
+  "dataset_sources": [],
+  "competition_sources": ["ai-mathematical-olympiad-progress-prize-3"],
+  "kernel_sources": []
+}
