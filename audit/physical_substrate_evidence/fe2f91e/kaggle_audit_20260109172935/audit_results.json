@@ -1,0 +1,35 @@
+{
+  "passfail_arena": {
+    "cmd": [
+      "/usr/bin/python3",
+      "/kaggle/working/tools/passfail_arena.py"
+    ],
+    "rc": 1,
+    "stderr": "",
+    "stdout": "FAIL: MISSING_FILES:\n/kaggle/working/kaggle_evaluation/aimo_3_gateway.py\n/kaggle/working/kaggle_evaluation/aimo_3_inference_server.py\n/kaggle/working/requirements.txt\n"
+  },
+  "predict_contract": {
+    "ok": true,
+    "preview": {
+      "answer": [
+        0
+      ],
+      "id": [
+        1
+      ]
+    },
+    "schema": {
+      "answer": "Int64",
+      "id": "Int64"
+    }
+  },
+  "self_audit": {
+    "cmd": [
+      "/usr/bin/python3",
+      "/kaggle/working/tools/self_audit.py"
+    ],
+    "rc": 0,
+    "stderr": "/kaggle/working/tools/self_audit.py:170: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n  f.write(f\"generated_at={datetime.utcnow().isoformat()}Z\\n\")\nNOTE: still no usable gold labels detected (dataset mismatch or missing answer column).\n",
+    "stdout": "/kaggle/working/audit/reports/misses_summary.md\nTOTAL=0 CORRECT=0 ACC=0.0000 MISSES=0\n"
+  }
+}
