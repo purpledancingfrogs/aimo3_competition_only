@@ -1,0 +1,13 @@
+import kaggle_evaluation.core.templates
+
+import aimo_3_gateway
+
+
+# AUREON_PATHFIX
+import os as _os, sys as _sys
+_ROOT = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+if _ROOT not in _sys.path: _sys.path.insert(0, _ROOT)
+
+class AIMO3InferenceServer(kaggle_evaluation.core.templates.InferenceServer):
+    def _get_gateway_for_test(self, data_paths=None, *args, **kwargs):
+        return aimo_3_gateway.AIMO3Gateway(data_paths)
