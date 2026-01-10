@@ -1,21 +1,21 @@
-﻿AUDIT REQUEST (DEVIL'S ADVOCATE) — AIMO-3
-Repo: https://github.com/purpledancingfrogs/aimo3_competition_only
-Create PR: [https://github.com/https://github.com/purpledancingfrogs/aimo3_competition_only/pull/new/audit-evidence-c82395f-20260109182733](https://github.com/https://github.com/purpledancingfrogs/aimo3_competition_only/pull/new/audit-evidence-c82395f-20260109182733)
+AUDIT REQUEST (DEVIL’S ADVOCATE) — AIMO-3
+Repo: purpledancingfrogs/aimo3_competition_only
+Create PR: https://github.com/purpledancingfrogs/aimo3_competition_only/pull/new/audit-evidence-c82395f-20260109182733
 Branch: audit-evidence-c82395f-20260109182733
-Commit: 8cdba1c4dbe7c2868d690ecb0fa0c079d061263c
+Commit: cdc63e5
 
-Evidence folder (in repo): audit/physical_substrate_evidence20260109182541/
+Evidence folder (in repo/ZIP): audit/physical_substrate_evidence/20260109181833/
 Files:
-- audit/physical_substrate_evidence20260109182541/solver_repo.py
-- audit/physical_substrate_evidence20260109182541/solver_kaggle.py
-- audit/physical_substrate_evidence20260109182541/script.py
-- audit/physical_substrate_evidence20260109182541/kernel-metadata.json
-- audit/physical_substrate_evidence20260109182541/kaggle_run.log
-- audit/physical_substrate_evidence20260109182541/forbidden_scan.txt
-- audit/physical_substrate_evidence20260109182541/byte_compare.txt
-- audit/physical_substrate_evidence20260109182541/SHA256.json
-- audit/physical_substrate_evidence20260109182541/GROK_REQUEST.txt
-- audit/physical_substrate_evidence20260109182541/GEMINI_REQUEST.txt
+- audit/physical_substrate_evidence/20260109181833/solver_repo.py
+- audit/physical_substrate_evidence/20260109181833/solver_kaggle.py
+- audit/physical_substrate_evidence/20260109181833/script.py
+- audit/physical_substrate_evidence/20260109181833/kernel-metadata.json
+- audit/physical_substrate_evidence/20260109181833/kaggle_run.log
+- audit/physical_substrate_evidence/20260109181833/forbidden_scan.txt
+- audit/physical_substrate_evidence/20260109181833/byte_compare.txt
+- audit/physical_substrate_evidence/20260109181833/SHA256.json
+- audit/physical_substrate_evidence/20260109181833/GROK_REQUEST.txt
+- audit/physical_substrate_evidence/20260109181833/GEMINI_REQUEST.txt
 
 Tasks (cite exact line numbers for any issue):
 1) solver_repo.py: solve() has NO file I/O, NO network, NO subprocess, NO randomness, NO eval/exec.
@@ -24,3 +24,5 @@ Tasks (cite exact line numbers for any issue):
 3) output contract: integer-only; clamped bounds; stable across repeated calls.
 4) Kaggle wiring: script.py + kernel-metadata.json uses AIMO3InferenceServer (not make_env); predict(*args, **kwargs) handles Polars inputs; returns DataFrame(id, answer).
 5) identity: compare solver_repo.py vs solver_kaggle.py; verify SHA256.json + byte_compare.txt; list any diffs.
+
+Additionally: flag any reason it fails submission (errors in kaggle_run.log) or violates rules; assess plausibility of 50/50 only from evidence + logs (private tests cannot be inferred).
