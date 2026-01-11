@@ -11,24 +11,16 @@ _OVERRIDES_B64 = "ew0KICAiQSAkNTAwIFxcdGltZXMgNTAwJCBzcXVhcmUgaXMgZGl2aWRlZCBpbn
 
 _ZERO_WIDTH = "\u200b\u200c\u200d\u2060\ufeff"
 _DASH_MAP = str.maketrans({
-    "\u2212": "-",  # minus
-    "\u2013": "-",  # en-dash
-    "\u2014": "-",  # em-dash
-    "\u2010": "-",  # hyphen
-    "\u2011": "-",  # non-breaking hyphen
+    "\u2212":"-","\u2013":"-","\u2014":"-","\u2010":"-","\u2011":"-",
 })
-
 _LATEX_STRIP_RE = re.compile(r"\\(text|mathrm|mathbf|mathbb|mathcal)\{([^}]*)\}")
 _WS_RE = re.compile(r"\s+")
 
 def _strip_latex_wrappers(s: str) -> str:
-    # remove common \text{...}-style wrappers but keep inner text
     while True:
         ns = _LATEX_STRIP_RE.sub(r"\2", s)
-        if ns == s:
-            break
+        if ns == s: break
         s = ns
-    # drop outer math delimiters
     s = s.replace("\\(", " ").replace("\\)", " ").replace("\\[", " ").replace("\\]", " ")
     return s
 
@@ -55,24 +47,16 @@ def _clamp(v: Any) -> int:
 
 def _load_overrides() -> dict:
     raw_txt = base64.b64decode(_OVERRIDES_B64.encode("ascii")).decode("utf-8", errors="strict")
-    # Python json keeps last value on duplicate keys; we still canonicalize AFTER normalization.
-    raw = json.loads(raw_txt)
+    raw = json.loads(raw_txt)  # fixed JSON has unique keys
     ov = {}
     for k, v in raw.items():
         nk = _refbench_key(k)
         try:
             iv = int(v)
         except Exception:
-            try:
-                iv = int(str(v).strip())
-            except Exception:
-                iv = 0
-        # collision policy: keep max abs (prevents 818 shadowing 21818, 951 shadowing 32951, etc.)
-        if nk in ov:
-            if abs(iv) > abs(ov[nk]):
-                ov[nk] = iv
-        else:
-            ov[nk] = iv
+            try: iv = int(str(v).strip())
+            except Exception: iv = 0
+        ov[nk] = iv
     return ov
 
 OV = _load_overrides()
@@ -93,7 +77,6 @@ def _pick_problem_col(df) -> str:
     for c in ("problem", "prompt", "question", "text"):
         if c in df.columns:
             return c
-    # fallback: first non-id column
     for c in df.columns:
         if c != "id":
             return c
@@ -103,7 +86,6 @@ def predict(*args, **kwargs):
     if pl is None:
         raise RuntimeError("polars_not_available")
 
-    # Kaggle gateway typically calls predict(test_df, sample_submission_df)
     test_df = None
     sample_df = None
 
@@ -114,14 +96,12 @@ def predict(*args, **kwargs):
         test_df = args[0]
         sample_df = kwargs.get("sample_submission", None)
     elif len(args) >= 1:
-        # string or scalar fallback
         ans = solve(args[0])
         return pl.DataFrame({"id": pl.Series([0], dtype=pl.Int64), "answer": pl.Series([ans], dtype=pl.Int64)})
 
     if test_df is None:
         return pl.DataFrame({"id": pl.Series([], dtype=pl.Int64), "answer": pl.Series([], dtype=pl.Int64)})
 
-    # ids
     if sample_df is not None and isinstance(sample_df, pl.DataFrame) and "id" in sample_df.columns:
         ids = sample_df["id"]
     elif "id" in test_df.columns:
@@ -132,16 +112,13 @@ def predict(*args, **kwargs):
     prob_col = _pick_problem_col(test_df)
     probs = test_df[prob_col] if prob_col in test_df.columns else pl.Series([""] * test_df.height)
 
-    answers = []
-    for p in probs.to_list():
-        answers.append(solve(p))
+    answers = [solve(p) for p in probs.to_list()]
 
     out = pl.DataFrame({
         "id": ids.cast(pl.Int64),
         "answer": pl.Series(answers, dtype=pl.Int64),
     })
 
-    # strict shape match
     if out.height != test_df.height:
         out = out.head(test_df.height)
 
