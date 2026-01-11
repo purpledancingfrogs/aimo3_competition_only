@@ -1,7 +1,7 @@
 {
     "id":  "nadinesquires/aimo3-dss-submission",
     "title":  "AIMO3 DSS Submission",
-    "code_file":  "submission_v58.py",
+    "code_file":  "submission.py",
     "language":  "python",
     "kernel_type":  "script",
     "is_private":  true,
