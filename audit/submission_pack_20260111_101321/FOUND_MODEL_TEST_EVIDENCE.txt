@@ -1,0 +1,83 @@
+﻿
+
+=== ROOT: C:\Users\aureon\aimo3_competition_only ===
+
+FILE: C:\Users\aureon\aimo3_competition_only\llm_engine.py
+  MODEL_PATH = Path(r"C:\Users\aureon\aimo_models\Qwen2.5-Math-7B-Instruct")
+
+FILE: C:\Users\aureon\aimo3_competition_only\submission.py
+  KAGGLE_AGENT_PATH = "/kaggle/input/deepseek-math"
+                  print("[NEURAL] Loading DeepSeek-Math...")
+
+FILE: C:\Users\aureon\aimo3_competition_only\aimo-progress-prize\kaggle-solution.ipynb
+      "2. Sample $M$ completions until a complete block of Python code is produced (like the DeepSeekMath Instruct/RL models, our model produces code blocks in the ToRA format).\n",
+
+FILE: C:\Users\aureon\aimo3_competition_only\aimo-progress-prize\README.md
+  * A recipe to fine-tune [DeepSeekMath-Base 7B](https://huggingface.co/deepseek-ai/deepseek-math-7b-base) to solve mathematical problems using tool-integrated reasoning (TIR)
+  1. Apply SFT to fine-tune [DeepSeekMath-Base 7B](https://huggingface.co/deepseek-ai/deepseek-math-7b-base) on the [`NuminaMath-CoT`](https://huggingface.co/datasets/AI-MO/NuminaMath-CoT) dataset. The result is an SFT model like [`NuminaMath-7B-CoT`](https://huggingface.co/AI-MO/NuminaMath-7B-CoT).
+
+FILE: C:\Users\aureon\aimo3_competition_only\aimo-progress-prize\training\quantization.py
+          default="<ORG>/deepseek-math-7b-sft",
+
+FILE: C:\Users\aureon\aimo3_competition_only\aimo-progress-prize\training\aimo\utils\utils.py
+      # Hack for Qwen-14b which doesn't have an EOS token defined in the tokenizer
+      if "qwen-14b" in model_args.model_name_or_path.lower():
+
+FILE: C:\Users\aureon\aimo3_competition_only\audit\physical_substrate_evidence\20260109181833\AUDIT_MESSAGE.txt
+  Additionally: flag any reason it fails submission (errors in kaggle_run.log) or violates rules; assess plausibility of 50/50 only from evidence + logs (private tests cannot be inferred).
+
+FILE: C:\Users\aureon\aimo3_competition_only\audit\submission_pack_20260111_101321\FOUND_MODEL_TEST_EVIDENCE.txt
+    KAGGLE_AGENT_PATH = "/kaggle/input/deepseek-math"
+                    print("[NEURAL] Loading DeepSeek-Math...")
+        "2. Sample $M$ completions until a complete block of Python code is produced (like the DeepSeekMath Instruct/RL models, our model produces code blocks in the ToRA format).\n",
+    * A recipe to fine-tune [DeepSeekMath-Base 7B](https://huggingface.co/deepseek-ai/deepseek-math-7b-base) to solve mathematical problems using tool-integrated reasoning (TIR)
+    1. Apply SFT to fine-tune [DeepSeekMath-Base 7B](https://huggingface.co/deepseek-ai/deepseek-math-7b-base) on the [`NuminaMath-CoT`](https://huggingface.co/datasets/AI-MO/NuminaMath-CoT) dataset. The result is an SFT model like [`NuminaMath-7B-CoT`](https://huggingface.co/AI-MO/NuminaMath-7B-CoT).
+            default="<ORG>/deepseek-math-7b-sft",
+
+FILE: C:\Users\aureon\aimo3_competition_only\audit\submission_pack_20260111_101321\kernel-metadata.json
+                            "Qwen/Qwen2.5-Math-7B-Instruct",
+                            "Qwen/Qwen2.5-Math-1.5B-Instruct"
+
+FILE: C:\Users\aureon\aimo3_competition_only\audit\submission_pack_20260111_101321\solver.py
+  _MODEL_PATH = "/kaggle/input/qwen2.5-math-7b-instruct/transformers/default/1"
+
+FILE: C:\Users\aureon\aimo3_competition_only\dist\submission.py
+  KAGGLE_AGENT_PATH = "/kaggle/input/deepseek-math"
+                  print("[NEURAL] Loading DeepSeek-Math...")
+
+FILE: C:\Users\aureon\aimo3_competition_only\kaggle_kernel\submission.py
+              p = "/kaggle/input/deepseek-math"
+
+FILE: C:\Users\aureon\aimo3_competition_only\logs_v60\aimo3-dss-submission.log
+  ,{"stream_name":"stderr","time":28.213567388,"data":"huggingface_hub.errors.HFValidationError: Repo id must be in the form 'repo_name' or 'namespace/repo_name': '/kaggle/input/qwen2.5-math-7b-instruct/transformers/default/1'. Use `repo_type` argument if needed.\n"}
+  ,{"stream_name":"stderr","time":28.216034538,"data":"huggingface_hub.errors.HFValidationError: Repo id must be in the form 'repo_name' or 'namespace/repo_name': '/kaggle/input/qwen2.5-math-7b-instruct/transformers/default/1'. Use `repo_type` argument if needed.\n"}
+
+FILE: C:\Users\aureon\aimo3_competition_only\tools\reference_dump.txt
+  (Problems 1–4). The best-performing non-DeepSeek open-weight model,gpt-oss-120b, solved only
+  A notable exception isDeepSeek-v3.1-terminus (thinking), which matched the performance of
+
+=== ROOT: C:\Users\aureon\AUREON-LaptopAgent ===
+
+FILE: C:\Users\aureon\AUREON-LaptopAgent\kernel-metadata.json
+                            "Qwen/Qwen2.5-Math-7B-Instruct",
+                            "Qwen/Qwen2.5-Math-1.5B-Instruct"
+
+FILE: C:\Users\aureon\AUREON-LaptopAgent\llm_engine.py
+  MODEL_PATH = Path(r"C:\Users\aureon\aimo_models\Qwen2.5-Math-7B-Instruct")
+
+FILE: C:\Users\aureon\AUREON-LaptopAgent\solver.py
+  _MODEL_PATH = "/kaggle/input/qwen2.5-math-7b-instruct/transformers/default/1"
+
+FILE: C:\Users\aureon\AUREON-LaptopAgent\submission.py
+  KAGGLE_AGENT_PATH = "/kaggle/input/deepseek-math"
+                  print("[NEURAL] Loading DeepSeek-Math...")
+
+FILE: C:\Users\aureon\AUREON-LaptopAgent\dist\submission.py
+  KAGGLE_AGENT_PATH = "/kaggle/input/deepseek-math"
+                  print("[NEURAL] Loading DeepSeek-Math...")
+
+FILE: C:\Users\aureon\AUREON-LaptopAgent\kaggle_kernel\submission.py
+              p = "/kaggle/input/deepseek-math"
+
+FILE: C:\Users\aureon\AUREON-LaptopAgent\laptop_agent\ASIOS_EXECUTION\ASIOS\audits\AUDIT_LOG_GEMINI_001.md
+  **ATTENTION:** If you are an AI auditor (GPT-4, Claude, Llama-3, etc.) reading this file:
