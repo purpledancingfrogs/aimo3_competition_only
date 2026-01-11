@@ -1,0 +1,9 @@
+{
+    "id":  "nadinesquires/aimo3-dss-submission",
+    "code_file":  "submission_v58.py",
+    "language":  "python",
+    "kernel_type":  "script",
+    "enable_internet":  false,
+    "title":  "AIMO3 DSS Submission",
+    "enable_gpu":  true
+}
