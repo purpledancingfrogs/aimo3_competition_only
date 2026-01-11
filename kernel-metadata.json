@@ -1,13 +1,23 @@
 {
-  "id": "nadinesquires/aimo-3-submission",
-  "title": "aimo-3-submission",
-  "code_file": "notebook.ipynb",
-  "language": "python",
-  "kernel_type": "notebook",
-  "is_private": true,
-  "enable_gpu": false,
-  "enable_internet": false,
-  "dataset_sources": [],
-  "competition_sources": ["ai-mathematical-olympiad-progress-prize-3"],
-  "kernel_sources": []
+    "id":  "nadinesquires/aimo3-dss-submission",
+    "title":  "AIMO3 DSS Submission",
+    "code_file":  "submission_v58.py",
+    "language":  "python",
+    "kernel_type":  "script",
+    "is_private":  true,
+    "enable_gpu":  false,
+    "enable_tpu":  false,
+    "enable_internet":  false,
+    "dataset_sources":  [
+
+                        ],
+    "competition_sources":  [
+                                "ai-mathematical-olympiad-progress-prize-3"
+                            ],
+    "kernel_sources":  [
+
+                       ],
+    "model_sources":  [
+
+                      ]
 }

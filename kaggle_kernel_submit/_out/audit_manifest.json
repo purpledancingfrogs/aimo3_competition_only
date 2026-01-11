@@ -1,9 +1,0 @@
-{
-  "head": "fe2f91edd9cf769e266a64c6ecf8cc3921ec31a1",
-  "platform": "Linux-6.6.105+-x86_64-with-glibc2.35",
-  "python": "3.12.12 (main, Oct 10 2025, 08:52:57) [GCC 11.4.0]",
-  "short": "fe2f91e",
-  "solver_sha256": "6231b18222740cf4edaa1b943c38381beab4fb6ee1ba78936531981fd25d57da",
-  "stamp": "20260109172843",
-  "time_utc": "2026-01-09T22:28:53Z"
-}
