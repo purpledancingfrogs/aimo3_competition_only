@@ -1,0 +1,9 @@
+﻿
+
+Algorithm : SHA256
+Hash      : 0C1D3E7751138CC4CBD579B2613856863D000D1DD233A3BBF5E036EA3EA839AB
+Path      : C:\Users\aureon\aimo3_competition_only\audit\physical_substrate_evidence\4b21e05\solver.py
+
+
+
+
