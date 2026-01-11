@@ -1,0 +1,14 @@
+﻿commit eec81a59ab8633ff136d9b82350b11e259d9df4e
+Author: Nadine Squires <purpledancingfrogs@gmail.com>
+Date:   Sun Jan 11 11:12:42 2026 -0500
+
+    audit: physical substrate evidence 1e66cef
+
+A	audit/physical_substrate_evidence/1e66cef/git_ls_tree.txt
+A	audit/physical_substrate_evidence/1e66cef/git_show_-1.txt
+A	audit/physical_substrate_evidence/1e66cef/git_status_porcelain.txt
+A	audit/physical_substrate_evidence/1e66cef/kaggle_solver.py
+A	audit/physical_substrate_evidence/1e66cef/kernel-metadata.json
+A	audit/physical_substrate_evidence/1e66cef/requirements.txt
+A	audit/physical_substrate_evidence/1e66cef/solver.py
+A	audit/physical_substrate_evidence/1e66cef/tools_runtime_overrides.json
