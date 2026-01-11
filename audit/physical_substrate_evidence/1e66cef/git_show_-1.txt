@@ -1,0 +1,8 @@
+﻿commit 1e66cef199da72f55d94152246ef6be88bbf4841
+Author: Nadine Squires <purpledancingfrogs@gmail.com>
+Date:   Sun Jan 11 11:10:00 2026 -0500
+
+    fix: dedupe overrides by solver key; force reference truth; rebuild clean solver embedding fixed OV
+
+M	solver.py
+M	tools/runtime_overrides.json
