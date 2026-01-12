@@ -32,7 +32,8 @@ def _to_i64(x) -> int:
         return 0
 
 class AIMO3Gateway:
-    def __init__(self):
+    def __init__(self, data_paths=None):
+        self._data_paths = data_paths
         from solver import solve
         self._solve = solve
 
@@ -46,4 +47,16 @@ class AIMO3Gateway:
             except Exception:
                 ans = 0
             outs.append(_to_i64(ans))
-        return pl.DataFrame({"answer": pl.Series("answer", outs, dtype=pl.Int64)})
+                # Contract: return DataFrame with columns exactly ['id','answer'] and row-aligned.
+        def _clamp_str(x):
+            s = str(x).strip()
+            try:
+                v = int(s)
+            except Exception:
+                v = 0
+            if v < 0: v = 0
+            if v > 99999: v = 99999
+            return str(v)
+        ans = [ _clamp_str(x) for x in outs ]
+        ids = df['id'] if 'id' in df.columns else pl.Series('id', list(range(len(ans))))
+        return pl.DataFrame({'id': ids, 'answer': pl.Series('answer', ans, dtype=pl.Utf8)})
