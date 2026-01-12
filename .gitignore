@@ -1,3 +1,14 @@
-﻿laptop_agent/
-laptop_executor.ps1
-missions/
+﻿__pycache__/
+*.zip
+output*/
+kernel_output/
+logs*/
+kaggle_submit_export*/
+kaggle/
+kaggle_data/
+kaggle_evaluation/**/__pycache__/
+tools/__pycache__/
+tools/_outputs/
+audit/reports/
+audit/redteam_bundle/
+comp_files/
