@@ -1,0 +1,23 @@
+{
+  "id": "nadinesquires/aimo-3-gold",
+  "id_no": 106243419,
+  "title": "aimo-3-gold",
+  "code_file": "aimo-3-gold.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": false,
+  "keywords": [],
+  "dataset_sources": [
+    "nadinesquires/aimo3-runtime-overrides-64"
+  ],
+  "kernel_sources": [],
+  "competition_sources": [
+    "ai-mathematical-olympiad-progress-prize-3"
+  ],
+  "model_sources": [],
+  "docker_image": "gcr.io/kaggle-private-byod/python@sha256:536e3d9752ddf933ae83b0a0c3ea67d38e6236db11a1cd47d84927a0b8d2c440",
+  "machine_shape": "Gpu"
+}

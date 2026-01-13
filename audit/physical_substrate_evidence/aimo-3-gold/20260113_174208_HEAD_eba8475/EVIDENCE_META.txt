@@ -1,0 +1,6 @@
+KERNEL_REF=nadinesquires/aimo-3-gold
+PULLED_AT_UTC=2026-01-13T22:42:10.3645956Z
+LOCAL_REPO_PATH=C:\Users\aureon\aimo3_competition_only
+GIT_HEAD=eba84759a8dce11c81df983db5db1aa2be901a83
+GIT_BRANCH=main
+FILES_COUNT=2
