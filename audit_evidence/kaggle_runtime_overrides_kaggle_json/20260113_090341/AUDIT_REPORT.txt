@@ -1,0 +1,13 @@
+﻿KAGGLE_OVERRIDES_DATASET_AUDIT
+timestamp=20260113_090341
+dataset_slug=nadinesquires/runtime-overrides-kaggle-json
+zip_name=runtime-overrides-kaggle-json.zip
+zip_sha256=AC0795749E201A1C05FA948BAC8C63097056B9C382849122BF94612DAD5FBE76
+canonical_repo_file=tools\runtime_overrides_kaggle.json
+canonical_sha256=663B5B8F5569453EF0FF3A76BF589A28C2F071DAB5D1D0825296D995F6336A15
+python_verify_output_begin
+SHA256 663B5B8F5569453EF0FF3A76BF589A28C2F071DAB5D1D0825296D995F6336A15
+RAW_KEYS 64
+NORM_KEYS 64
+COLLISIONS 0
+python_verify_output_end
