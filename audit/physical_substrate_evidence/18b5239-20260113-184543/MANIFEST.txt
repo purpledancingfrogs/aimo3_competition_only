@@ -1,0 +1,10 @@
+﻿HEAD=18b52399f0c2d2402d6a8c5d8267bc9cebb823f5
+STAMP=20260113-184543
+IPYNB=C:\Users\aureon\aimo3_competition_only\kaggle\aimo-3-gold\aimo-3-gold.ipynb
+KMETA=C:\Users\aureon\aimo3_competition_only\kaggle\aimo-3-gold\kernel-metadata.json
+OV_LOCAL=C:\Users\aureon\aimo3_competition_only\tools\runtime_overrides_kaggle.json
+
+aimo-3-gold.ipynb	6657
+kernel-metadata.json	476
+MANIFEST.txt	329
+runtime_overrides_kaggle.json	36689
