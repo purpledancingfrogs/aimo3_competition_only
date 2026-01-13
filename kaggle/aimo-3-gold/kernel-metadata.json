@@ -1,0 +1,9 @@
+{
+  "id": "nadinesquires/aimo-3-gold",
+  "title": "aimo-3-gold",
+  "code_file": "aimo-3-gold.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "enable_gpu": true,
+  "is_private": true
+}
