@@ -1,4 +1,4 @@
-__pycache__/
+﻿__pycache__/
 *.pyc
 *.pyo
 *.pyd
@@ -104,3 +104,13 @@ kaggle_pull_check/
 kaggle_pull_check2/
 share/
 **/*
+legacy_token.txt
+AIMO3_ALL_53*.json
+*ALL_53*.json
+runtime_overrides_ALL_53*.json
+runtime_overrides_kaggle_old*.json
+runtime_overrides_kaggle_backup*.json
+runtime_overrides_kaggle_v*.json
+runtime-overrides-*-metadata.json
+runtime-overrides-*.zip
+archive*.zip
