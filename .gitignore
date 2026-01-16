@@ -124,3 +124,6 @@ runtime-overrides-*-metadata.json
 runtime-overrides-*.zip
 archive*.zip
 >>>>>>> main
+**/kernel-metadata.json
+tools/runtime_overrides*.json
+tools/*overrides*.json
