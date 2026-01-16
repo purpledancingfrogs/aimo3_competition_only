@@ -98,7 +98,16 @@ tools/eval_*
 tools/*failures*.jsonl
 tools/*summary*.txt
 tools/aimo3_submit_*.zip
+<<<<<<< HEAD
+=======
+kaggle//
+>>>>>>> main
 audit_local/
 kaggle_pull_check/
 kaggle_pull_check2/
 share/
+<<<<<<< HEAD
+=======
+**/*
+>>>>>>> main
+legacy_token.txt
