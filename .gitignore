@@ -98,3 +98,7 @@ tools/eval_*
 tools/*failures*.jsonl
 tools/*summary*.txt
 tools/aimo3_submit_*.zip
+kaggle/aimo3-50-50-override-final/
+audit_local/
+kaggle_pull_check/
+kaggle_pull_check2/
