@@ -109,5 +109,18 @@ share/
 <<<<<<< HEAD
 =======
 **/*
+<<<<<<< HEAD
 >>>>>>> main
 legacy_token.txt
+=======
+legacy_token.txt
+AIMO3_ALL_53*.json
+*ALL_53*.json
+runtime_overrides_ALL_53*.json
+runtime_overrides_kaggle_old*.json
+runtime_overrides_kaggle_backup*.json
+runtime_overrides_kaggle_v*.json
+runtime-overrides-*-metadata.json
+runtime-overrides-*.zip
+archive*.zip
+>>>>>>> main
