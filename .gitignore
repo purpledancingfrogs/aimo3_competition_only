@@ -1,4 +1,4 @@
-﻿__pycache__/
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
@@ -127,3 +127,7 @@ archive*.zip
 **/kernel-metadata.json
 tools/runtime_overrides*.json
 tools/*overrides*.json
+
+# Kaggle artifacts
+
+!kaggle/aimo-3-gold/submission.ipynb
